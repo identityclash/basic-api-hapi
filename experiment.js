@@ -1,3 +1,5 @@
+// This file is only an experiment of hapi.js usage
+
 'use strict';
 
 const Hapi = require('hapi');
