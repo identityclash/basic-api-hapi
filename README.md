@@ -1,0 +1,1 @@
+GoClass REST API server using hapi.js
