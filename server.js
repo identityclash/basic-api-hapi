@@ -5,6 +5,7 @@ const Good = require('good');
 
 const server = new Hapi.Server();
 
+const authValidation = require('./auth_validation');
 const userValidation = require('./user_validation');
 const apiResponse = require('./api_response');
 const dbRedis = require('./db_redis');
@@ -13,64 +14,68 @@ server.connection({ port: 3000 });
 server.app.alias = 'GoClass';
 
 server.method('user.registration.validate', userValidation.validateRegistration);
+server.method('auth.validate', authValidation.validateAuth);
 
 server.route({
-	method: 'POST',
-	path: '/auth/user',
-	handler: function (request, reply) {
-        let user = request.payload;
-        
+    method: 'POST',
+    path: '/auth/user',
+    handler: function (request, reply) {
+        let credentials = request.payload;
+
         // validate user registration details
-        server.methods.user.registration.validate(user, function(err, result) {
+        server.methods.auth.validate(credentials, function (err, result) {
             if (err) {
-                let response = apiResponse.constructApiResponse( err.error_code, err.error_message);
-                server.log('error', '/user/register ' + response);
+                let response = apiResponse.constructApiErrorResponse(400, err.error_code, err.error_message);
+                server.log('error', '/auth/user ' + response);
                 reply(response);
             } else {
-                let registeredUser = result;
-                reply(apiResponse.constructApiResponse( 201, registeredUser.name + ' registered' ));
+                let session = {
+                    'session':result
+                }
+                reply(session);
             }
         });
-	}
+    }
 });
 
 server.route({
-	method: 'POST',
-	path: '/user/register',
-	handler: function (request, reply) {
+    method: 'POST',
+    path: '/user/register',
+    handler: function (request, reply) {
         let user = request.payload;
-        
+
         // validate user registration details
-        server.methods.user.registration.validate(user, function(err, result) {
+        server.methods.user.registration.validate(user, function (err, result) {
             if (err) {
-                let response = apiResponse.constructApiResponse( err.error_code, err.error_message);
+                let response = apiResponse.constructApiErrorResponse(400, err.error_code, err.error_message);
                 server.log('error', '/user/register ' + response);
                 reply(response);
             } else {
                 let userDetails = result;
                 dbRedis.writeUserDetails(userDetails);
-                reply(apiResponse.constructApiResponse( 201, userDetails.name + ' registered' ));
+                reply(userDetails.name + ' registered');
             }
         });
-	}
+    }
 });
 
 server.route({
-   method: 'GET',
-   path: '/user/{email}',
-   handler: function (request, reply) {
+    method: 'GET',
+    path: '/user/{email}',
+    handler: function (request, reply) {
         let userEmail = encodeURIComponent(request.params.email);
-        dbRedis.getUserDetails(decodeURIComponent(userEmail), function(err, obj) {
+        dbRedis.getUserDetails(decodeURIComponent(userEmail), function (err, obj) {
             if (err) {
                 server.log('error', '/user/' + request.params.email + " " + err);
                 reply(apiResponse.getUnexpectedApiError());
             } else if (obj == null) {
                 reply(apiResponse.getUserNonExistentError());
             } else {
+                delete obj.password;// remove 'password' property in response
                 reply(JSON.stringify(obj));
             }
         });
-   } 
+    }
 });
 
 server.register({
@@ -93,7 +98,7 @@ server.register({
     server.start((err) => {
 
         if (err) {
-           throw err;
+            throw err;
         }
         server.log('info', 'server running at: ' + server.info.uri);
     });

@@ -13,11 +13,13 @@
   "license": "MIT",
   "dependencies": {
     "bcrypt": "^0.8.5",
+    "bcryptjs": "^2.3.0",
     "good": "^6.6.0",
     "good-console": "^5.3.1",
     "hapi": "^13.3.0",
     "hapi-auth-basic": "^4.1.0",
     "inert": "^3.2.0",
-    "redis": "^2.6.0-1"
+    "redis": "^2.6.0-1",
+    "validator": "^5.2.0"
   }
 }
