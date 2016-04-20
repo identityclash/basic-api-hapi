@@ -16,7 +16,7 @@ const dbRedis = require('./db_redis');
  * @param cb The callback function when User object details has been checked.
  */
 const validateAuth = function (payload, cb) {
-    let err = {
+    let apiError = {
         error_code: 400,
         error_message: 'Invalid login'
     };
@@ -26,7 +26,7 @@ const validateAuth = function (payload, cb) {
 
     if (!payload) {
         // credentials details empty
-        cb(err, payload, 0);
+        cb(apiError, payload, 0);
     } else {
         let passwordChecked = function() {
             let session = '';
@@ -48,15 +48,15 @@ const validateAuth = function (payload, cb) {
         
         dbRedis.getUserDetails(credentials.email, function (err, obj) {
             if (err) {
-                cb(err, payload, 0);    
+                cb(apiError, payload, 0);    
             } else if (obj == null) {
-                cb(err, payload, 0);
+                cb(apiError, payload, 0);
             } else {
                 let hashPwd = obj.password;
                 Bcryptjs.compare(credentials.password, hashPwd, function(err, res) {
-                    if (err) {
+                    if (err || res == false) {
                         // password did not matched, throw err
-                        cb(err, payload, 0);
+                        cb(apiError, payload, 0);
                     } else {
                         // password matched
                         passwordChecked(); 
