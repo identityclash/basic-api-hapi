@@ -72,6 +72,18 @@ const updateUserDetails = function (user) {
     });
 };
 
+/**
+ * Update User password to Redis database.
+ * @param user The User object containing the password.
+ */
+const updateUserPassword = function (userEmail, password) {
+    let salt = Bcryptjs.genSaltSync(10);
+    let hashPwd = Bcryptjs.hashSync(password, salt);
+    redisClient.HMSET('user:' + userEmail, {
+        "password": hashPwd
+    });
+};
+
 
 module.exports = {
     getUserSession: getUserSession,
@@ -79,5 +91,6 @@ module.exports = {
     refreshSessionExpiry: refreshSessionExpiry,
     getUserDetails: getUserDetails,
     writeUserDetails: writeUserDetails,
-    updateUserDetails: updateUserDetails
+    updateUserDetails: updateUserDetails,
+    updateUserPassword: updateUserPassword
 };

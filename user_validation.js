@@ -51,18 +51,16 @@ const validateUserDetails = function (payload, cb) {
 
 /**
  * Check if user password is valid.
- * @param payload The JSON String of User object containing the password.
+ * @param payload The password string.
  * @param cb The callback function when User object password has been checked.
  */
-const validateUserDetailsPassword = function (payload, cb) {
+const validatePassword = function (payload, cb) {
     let err = {
         error_code: 428,
         error_message: 'User password invalid. Must be letters or numbers. Minimum of 8 characters.'
     };
 
-    let userRegDetails = JSON.parse(payload);
-
-    if (!payload || !isPasswordValid(userRegDetails.password)) {
+    if (!payload || !isPasswordValid(payload)) {
         // user password invalid, must be alphanumeric characters only
         cb(err, payload, 0);
 
@@ -132,5 +130,5 @@ function isPasswordValid(password) {
 
 module.exports = {
     validateUserDetails: validateUserDetails,
-    validateUserDetailsPassword: validateUserDetailsPassword
+    validatePassword: validatePassword
 };
