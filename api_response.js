@@ -3,6 +3,20 @@
 const Boom = require('boom');
 
 /**
+ * Create API response which contains a API status code and message.
+ * @param httpStatus The standard http status code. i.e 400
+ * @param apiStatusCode The API status code.
+ * @param msg The API response message of status code.
+ */ 
+const constructApiResponse = function (httpStatus, apiStatusCode, msg) {
+    let response = {
+        'statusCode': httpStatus,
+        'message': msg
+    }
+    return response;
+};
+
+/**
  * Create API error response which contains a API status code and message.
  * @param httpStatus The standard http status code. i.e 400
  * @param apiStatusCode The API status code.
@@ -35,6 +49,7 @@ const getUserNonExistentError = function () {
 };
 
 module.exports = {
+    constructApiResponse: constructApiResponse,
     constructApiErrorResponse: constructApiErrorResponse,
     getUnexpectedApiError: getUnexpectedApiError,
     getUserNonExistentError: getUserNonExistentError

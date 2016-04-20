@@ -34,6 +34,17 @@ const refreshSessionExpiry = function (email, session) {
     redisClient.expire('session:' + email, 10);
 }
 
+/** 
+ * Get the details of User with the email.
+ * @param userEmail The string email of User details to get.
+ * @param cb The callback function when User details has been populated.
+ */
+const getUserDetails = function (userEmail, cb) {
+    redisClient.hgetall('user:' + userEmail, function (err, obj) {
+        cb(err, obj);
+    });
+};
+
 /**
  * Save User object details to Redis database.
  * @param user The User object containing the details.
@@ -50,21 +61,23 @@ const writeUserDetails = function (user) {
     });
 };
 
-/** 
- * Get the details of User with the email.
- * @param userEmail The string email of User details to get.
- * @param cb The callback function when User details has been populated.
+/**
+ * Update User details to Redis database.
+ * @param user The User object containing the details.
  */
-const getUserDetails = function (userEmail, cb) {
-    redisClient.hgetall('user:' + userEmail, function (err, obj) {
-        cb(err, obj);
+const updateUserDetails = function (user) {
+    redisClient.HMSET('user:' + user.email, {
+        "name": user.name,
+        "birthday": user.birthday
     });
 };
+
 
 module.exports = {
     getUserSession: getUserSession,
     createUserSession: createUserSession,
     refreshSessionExpiry: refreshSessionExpiry,
+    getUserDetails: getUserDetails,
     writeUserDetails: writeUserDetails,
-    getUserDetails: getUserDetails
+    updateUserDetails: updateUserDetails
 };
