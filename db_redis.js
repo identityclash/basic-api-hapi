@@ -1,7 +1,9 @@
 'use strict';
 
 const Redis = require('redis');
-const Bcryptjs = require('bcryptjs');
+const Bcryptjs = require('bcryptjs');// pasword encyption
+const CryptoJS = require('crypto-js');// session creation
+const utils = require('./utils');
 
 const redisClient = Redis.createClient();
 
@@ -9,30 +11,86 @@ redisClient.on("error", function (err) {
     console.log("Error " + err);
 });
 
-// Get user session stored in database. Return null/empty if no session found.
-const getUserSession = function (email, cb) {
-    redisClient.get('session:' + email, function (err, reply) {
-        cb(err, reply);
+/** 
+ * Create user session with expiry of 30 minutes.
+ * @param headers The request header object containing 'GoClassToken', 'GoClassDevice', and 'GoClassVersion'.
+ */
+const createUserSession = function (headers, userEmail) {
+    const entityId = utils.hmacMd5Encrypt(JSON.stringify(userEmail));
+    
+    let sessionData = {
+        'entityId': entityId,
+        'email': userEmail,
+        'device': headers.goclassdevice,
+        'version': headers.goclassversion
+    };
+
+    const sessionToken = utils.hmacMd5Encrypt(JSON.stringify(sessionData));
+
+    redisClient.HMSET('session:' + sessionToken, {
+        'entityId': sessionData.entityId,
+        'email': sessionData.email,
+        'device': sessionData.device,
+        'version': sessionData.version,
+        'dateCreated': Date.now()
     });
-}
+    
+    redisClient.set('session:email:' + entityId, sessionToken);
+    
+    const expiryDuration = parseInt((+new Date)/1000) + 1800;// 30minutes ahead of current time
+    
+    redisClient.expireat('session:' + sessionToken, expiryDuration);
+    redisClient.expireat('session:email:' + entityId, expiryDuration);
+    
+    return sessionToken;
+};
 
-// Create user session if not exist else refresh expiry
-const createUserSession = function (email) {
+/**
+ * Get user session stored in database. Return null/empty if no session found.
+ * @param headers The request header object containing 'GoClassToken', 'GoClassDevice', and 'GoClassVersion'.
+ * @param userEmail The User's email that will be used for searching if there's an existing session token.
+ * @returns The session token String.
+ */
+const getUserSession = function (headers, userEmail, cb) {
+    var sessionData = {};
+    let sessionToken = '';
 
-    var salt = Bcryptjs.genSaltSync(10);
-    var hash = Bcryptjs.hashSync(Date.now().toString(), salt);
+    const entityId = utils.hmacMd5Encrypt(JSON.stringify(userEmail));
 
-    redisClient.set('session:' + email, hash);
-    redisClient.expire('session:' + email, 10);
+    if (!headers.goclasstoken) {
+        sessionData = {
+            'entityId': entityId,
+            'email': userEmail,
+            'device': headers.goclassdevice,
+            'version': headers.goclassversion,
+            'dateCreated': Date.now()
+        };
+        
+        sessionToken = utils.hmacMd5Encrypt(JSON.stringify(sessionData));
+    } else {
+        sessionToken = headers.goclasstoken;
+    }
 
-    return hash;
-}
+    redisClient.hgetall('session:' + sessionToken, function (err, obj) {
+        if (err || obj == null) {
+            cb(err, obj);
+        } else {
+            cb(err, sessionToken);
+        }
+    });
+};
 
 // Reset user session expiry to 30 minutes
-const refreshSessionExpiry = function (email, session) {
-    redisClient.set('session:' + email, session);
-    redisClient.expire('session:' + email, 10);
-}
+const refreshSessionExpiry = function (sessionToken) {
+    redisClient.hgetall('session:' + sessionToken, function (err, obj) {
+        var entityId = obj.entityId;
+        
+        const expiryDuration = parseInt((+new Date)/1000) + 1800;// 30minutes ahead of current time
+        
+        redisClient.expireat('session:' + sessionToken, expiryDuration);
+        redisClient.expireat('session:email:' + entityId, expiryDuration);
+    });
+};
 
 /** 
  * Get the details of User with the email.
@@ -52,12 +110,16 @@ const getUserDetails = function (userEmail, cb) {
 const writeUserDetails = function (user) {
     let salt = Bcryptjs.genSaltSync(10);
     let hashPwd = Bcryptjs.hashSync(user.password, salt);
+    
+    const entityId = utils.hmacMd5Encrypt(JSON.stringify(userEmail));
+    
     redisClient.HMSET('user:' + user.email, {
-        "email": user.email,
-        "name": user.name,
-        "birthday": user.birthday,
-        "gender": user.gender,
-        "password": hashPwd
+        'entityId': entityId,
+        'email': user.email,
+        'name': user.name,
+        'birthday': user.birthday,
+        'gender': user.gender,
+        'password': hashPwd
     });
 };
 
@@ -67,8 +129,8 @@ const writeUserDetails = function (user) {
  */
 const updateUserDetails = function (user) {
     redisClient.HMSET('user:' + user.email, {
-        "name": user.name,
-        "birthday": user.birthday
+        'name': user.name,
+        'birthday': user.birthday
     });
 };
 
@@ -80,7 +142,7 @@ const updateUserPassword = function (userEmail, password) {
     let salt = Bcryptjs.genSaltSync(10);
     let hashPwd = Bcryptjs.hashSync(password, salt);
     redisClient.HMSET('user:' + userEmail, {
-        "password": hashPwd
+        'password': hashPwd
     });
 };
 
