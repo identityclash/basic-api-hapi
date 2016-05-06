@@ -2,19 +2,20 @@
   "name": "goclass-server",
   "version": "1.0.0",
   "description": "GoClass Server",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "test": "make test"
   },
   "keywords": [
     "GoClass"
   ],
-  "author": "GoClass",
+  "author": "Roxxy Rafael",
   "license": "MIT",
   "dependencies": {
     "bcrypt": "^0.8.5",
     "bcryptjs": "^2.3.0",
     "crypto-js": "^3.1.6",
+    "glue": "^3.2.0",
     "good": "^6.6.0",
     "good-console": "^5.3.1",
     "hapi": "^13.3.0",

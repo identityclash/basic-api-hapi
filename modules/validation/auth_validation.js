@@ -1,11 +1,51 @@
 'use strict';
 
-const Validator = require('validator');
 const Bcryptjs = require('bcryptjs');
 
-const dbRedis = require('../db_redis');
-const utils = require('../utils');
 const headerValidation = require('./header_validation');
+const utils = require('../../utility/util');
+
+/**
+ * Check request header that contains 'GoClassToken', 'GoClassDevice', 'GoClassVersion' for session
+ * @param userEmail The User email of Client.
+ * @param headers The request headers sent by client containing device and version.
+ * @param cb The callback of where to pass err if no session found.
+ */
+const validateSession = function (server, headers, cb) {
+    let err = {
+        error_code: 401,
+        error_message: 'Unauthorized access.'
+    };
+    
+    headerValidation.validateHeaders(headers, function(err) {
+        if (err) {
+            cb(err);// no headers of 'GoClassDevice' && 'GoClassVersion'
+        } else {
+            const headerSession = headers.goclasstoken;
+            
+            if (!headerSession) {
+                cb(err);// session empty details empty
+                
+            } else {
+                server.methods.db.getUserSession(headers, null, function (err, reply) {
+                    if (err || reply == null || reply == undefined) {
+                        cb(err);
+                    } else if (reply.toString()) {
+                        let storedSession = reply.toString();
+                        if (utils.compareStrings(headerSession, storedSession)) {
+                            // refresh session expiry if valid and existing
+                            server.methods.db.refreshSessionExpiry(reply.toString());
+                            cb(null);
+                        } else {
+                            cb(err);
+                        }
+                    }
+                });
+                
+            }
+        }
+    });
+};
 
 /**
  * Check if User authentication is valid for login.
@@ -18,7 +58,7 @@ const headerValidation = require('./header_validation');
  * }
  * @param cb The callback function when User object details has been checked.
  */
-const validateAuth = function (headers, payload, cb) {
+const validateAuth = function (server, headers, payload, cb) {
     let apiError = {
         error_code: 400,
         error_message: 'Invalid login'
@@ -36,21 +76,21 @@ const validateAuth = function (headers, payload, cb) {
             } else {
                 let passwordChecked = function() {
                     let session = '';
-                    dbRedis.getUserSession(headers, credentials.email, function (err, reply) {
+                    server.methods.db.getUserSession(headers, credentials.email, function (err, reply) {
                         if (err || reply == null || reply == undefined) {
                             // create session if no existing
-                            session = dbRedis.createUserSession(headers, credentials.email);
+                            session = server.methods.db.createUserSession(headers, credentials.email);
                             cb(null, session);
                         } else if (reply.toString()) {
                             session = reply.toString();
                             // refresh session expiry if existing
-                            dbRedis.refreshSessionExpiry(session);
+                            server.methods.db.refreshSessionExpiry(session);
                             cb(null, session);
                         }
                     });
                 };
                 
-                dbRedis.getUserDetails(credentials.email, function (err, obj) {
+                server.methods.db.getUserDetails(credentials.email, function (err, obj) {
                     if (err) {
                         cb(apiError, payload);    
                     } else if (obj == null) {
@@ -73,51 +113,7 @@ const validateAuth = function (headers, payload, cb) {
     });
 };
 
-
-/**
- * Check request header that contains 'GoClassToken', 'GoClassDevice', 'GoClassVersion' for session
- * @param userEmail The User email of Client.
- * @param headers The request headers sent by client containing device and version.
- * @param cb The callback of where to pass err if no session found.
- */
-const validateSession = function (headers, cb) {
-    let err = {
-        error_code: 401,
-        error_message: 'Unauthorized access.'
-    };
-    
-    headerValidation.validateHeaders(headers, function(err) {
-        if (err) {
-            cb(err);// no headers of 'GoClassDevice' && 'GoClassVersion'
-        } else {
-            const headerSession = headers.goclasstoken;
-            
-            if (!headerSession) {
-                cb(err);// session empty details empty
-                
-            } else {
-                dbRedis.getUserSession(headers, null, function (err, reply) {
-                    if (err || reply == null || reply == undefined) {
-                        cb(err);
-                    } else if (reply.toString()) {
-                        let storedSession = reply.toString();
-                        if (utils.compareStrings(headerSession, storedSession)) {
-                            // refresh session expiry if valid and existing
-                            dbRedis.refreshSessionExpiry(reply.toString());
-                            cb(null);
-                        } else {
-                            cb(err);
-                        }
-                    }
-                });
-                
-            }
-        }
-    });
-};
-
-
 module.exports = {
-    validateAuth: validateAuth,
-    validateSession: validateSession
+    validateSession: validateSession,
+    validateAuth: validateAuth
 };

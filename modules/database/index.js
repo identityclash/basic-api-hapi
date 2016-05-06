@@ -3,7 +3,8 @@
 const Redis = require('redis');
 const Bcryptjs = require('bcryptjs');// pasword encyption
 const CryptoJS = require('crypto-js');// session creation
-const utils = require('./utils');
+
+const utils = require('../../utility/util');
 
 const redisClient = Redis.createClient();
 
@@ -111,7 +112,7 @@ const writeUserDetails = function (user) {
     let salt = Bcryptjs.genSaltSync(10);
     let hashPwd = Bcryptjs.hashSync(user.password, salt);
     
-    const entityId = utils.hmacMd5Encrypt(JSON.stringify(userEmail));
+    const entityId = utils.hmacMd5Encrypt(user.userEmail);
     
     redisClient.HMSET('user:' + user.email, {
         'entityId': entityId,
@@ -147,12 +148,19 @@ const updateUserPassword = function (userEmail, password) {
 };
 
 
-module.exports = {
-    getUserSession: getUserSession,
-    createUserSession: createUserSession,
-    refreshSessionExpiry: refreshSessionExpiry,
-    getUserDetails: getUserDetails,
-    writeUserDetails: writeUserDetails,
-    updateUserDetails: updateUserDetails,
-    updateUserPassword: updateUserPassword
+exports.register = function (server, options, next) {
+
+    server.method('db.createUserSession', createUserSession);
+    server.method('db.getUserSession', getUserSession);
+    server.method('db.refreshSessionExpiry', refreshSessionExpiry);
+    server.method('db.getUserDetails', getUserDetails);    
+    server.method('db.writeUserDetails', writeUserDetails);  
+    server.method('db.updateUserDetails', updateUserDetails);
+    server.method('db.updateUserPassword', updateUserPassword);
+
+    next();
+};
+
+exports.register.attributes = {
+    pkg: require('./package.json')
 };

@@ -1,0 +1,21 @@
+{
+	"server": {},
+	"connections": [
+		{
+			"port": 3000,
+			"labels": ["api"]
+		}
+	],
+	"registrations": [
+		{
+			"plugin": {
+				"register": "./modules/database"
+			}
+		},
+		{
+			"plugin": {
+				"register": "./modules/api-service"
+			}
+		}
+	]
+}
