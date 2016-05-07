@@ -1,8 +1,8 @@
 'use strict';
 
 const Redis = require('redis');
-const Bcryptjs = require('bcryptjs');// pasword encyption
-const CryptoJS = require('crypto-js');// session creation
+const Bcryptjs = require('bcryptjs');
+const CryptoJS = require('crypto-js');
 
 const utils = require('../../utility/util');
 
@@ -19,21 +19,24 @@ redisClient.on("error", function (err) {
 const createUserSession = function (headers, userEmail) {
     const entityId = utils.hmacMd5Encrypt(JSON.stringify(userEmail));
     
+    const dateNow = Date.now();
+
     let sessionData = {
         'entityId': entityId,
         'email': userEmail,
         'device': headers.goclassdevice,
-        'version': headers.goclassversion
+        'version': headers.goclassversion,
+        'dateCreated': dateNow
     };
 
     const sessionToken = utils.hmacMd5Encrypt(JSON.stringify(sessionData));
 
     redisClient.HMSET('session:' + sessionToken, {
-        'entityId': sessionData.entityId,
-        'email': sessionData.email,
-        'device': sessionData.device,
-        'version': sessionData.version,
-        'dateCreated': Date.now()
+        'entityId': entityId,
+        'email': userEmail,
+        'device': headers.goclassdevice,
+        'version': headers.goclassversion,
+        'dateCreated': dateNow
     });
     
     redisClient.set('session:email:' + entityId, sessionToken);
@@ -53,32 +56,28 @@ const createUserSession = function (headers, userEmail) {
  * @returns The session token String.
  */
 const getUserSession = function (headers, userEmail, cb) {
-    var sessionData = {};
-    let sessionToken = '';
-
-    const entityId = utils.hmacMd5Encrypt(JSON.stringify(userEmail));
-
-    if (!headers.goclasstoken) {
-        sessionData = {
-            'entityId': entityId,
-            'email': userEmail,
-            'device': headers.goclassdevice,
-            'version': headers.goclassversion,
-            'dateCreated': Date.now()
-        };
+    let sessionToken = headers.goclasstoken;
+    
+    if (sessionToken != null) {
+        redisClient.hgetall('session:' + sessionToken, function (err, obj) {
+            if (err || obj == null) {
+                cb(err, obj);
+            } else {
+                cb(err, sessionToken);
+            }
+        });
         
-        sessionToken = utils.hmacMd5Encrypt(JSON.stringify(sessionData));
-    } else {
-        sessionToken = headers.goclasstoken;
-    }
-
-    redisClient.hgetall('session:' + sessionToken, function (err, obj) {
-        if (err || obj == null) {
+    } else if (userEmail != null) {
+        const entityId = utils.hmacMd5Encrypt(JSON.stringify(userEmail));
+        redisClient.get('session:email:' + entityId, function (err, obj) {
             cb(err, obj);
-        } else {
-            cb(err, sessionToken);
-        }
-    });
+        });
+        
+    } else {
+        let err = {};
+        cb(err, null);
+        
+    }
 };
 
 // Reset user session expiry to 30 minutes
