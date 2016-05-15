@@ -1,1 +1,1 @@
-GoClass REST API server using hapi.js
+Basic REST API server using Hapi.js

@@ -12,10 +12,10 @@ const register = function (request, reply) {
 	        
     headerValidation.validateHeaders(request.headers, function(err) {
         if (err) {
-            // no headers of 'GoClassDevice' && 'GoClassVersion'
+            // no headers of 'Device' && 'Version'
             let response = apiResponse.constructApiErrorResponse(400, err.error_code, err.error_message);
             server.log('error', '/user/register ' + response);
-            reply(response);
+            reply(response).type('application/json');
                     
         } else {
             let user = request.payload;
@@ -27,12 +27,12 @@ const register = function (request, reply) {
                     if (err) {
                         let response = apiResponse.constructApiErrorResponse(400, err.error_code, err.error_message);
                         server.log('error', '/user/register ' + response);
-                        reply(response);
+                        reply(response).type('application/json');
                         
                     } else {
                         server.methods.db.writeUserDetails(userDetails);
                         let response = apiResponse.constructApiResponse(201, 201, userDetails.name + ' registered');
-                        reply(response);
+                        reply(response).type('application/json');
                         
                     }
                 });
@@ -43,7 +43,7 @@ const register = function (request, reply) {
                 if (err) {
                     let response = apiResponse.constructApiErrorResponse(400, err.error_code, err.error_message);
                     server.log('error', '/user/register ' + response);
-                    reply(response);
+                    reply(response).type('application/json');
                     
                 } else {
                     checkPassword();
@@ -64,12 +64,12 @@ const getDetails = function (request, reply) {
     server.methods.db.getUserDetails(decodeURIComponent(userEmail), function (err, obj) {
         if (err) {
             server.log('error', '/user/' + request.params.email + " " + err);
-            reply(apiResponse.getUnexpectedApiError());
+            reply(apiResponse.getUnexpectedApiError()).type('application/json');
         } else if (obj == null) {
             reply(apiResponse.getUserNonExistentError());
         } else {
             delete obj.password;// remove 'password' property in response
-            reply(JSON.stringify(obj));
+            reply(JSON.stringify(obj)).type('application/json');
         }
     });
 };
@@ -88,11 +88,11 @@ const updateDetails = function (request, reply) {
             if (err) {
                 let response = apiResponse.constructApiErrorResponse(400, err.error_code, err.error_message);
                 server.log('error', '/user/' + request.params.email + " " + response);
-                reply(response);
+                reply(response).type('application/json');
             } else {
                 server.methods.db.updateUserDetails(user);
                 let response = apiResponse.constructApiResponse(200, 200, 'User updated.');
-                reply(response);
+                reply(response).type('application/json');
             }
         });
     };
@@ -101,9 +101,9 @@ const updateDetails = function (request, reply) {
     server.methods.db.getUserDetails(email, function (err, obj) {
         if (err) {
             server.log('error', '/user/' + email + " " + err);
-            reply(apiResponse.getUnexpectedApiError());
+            reply(apiResponse.getUnexpectedApiError()).type('application/json');
         } else if (obj == null) {
-            reply(apiResponse.getUserNonExistentError());
+            reply(apiResponse.getUserNonExistentError()).type('application/json');
         } else {
             // set fields that should NOT be updated
             userMod.email = obj.email;
@@ -127,12 +127,12 @@ const changePassword = function (request, reply) {
             if (err) {
                 let response = apiResponse.constructApiErrorResponse(400, err.error_code, err.error_message);
                 server.log('error', '/user/' + email + '/password ' + response);
-                reply(response);
+                reply(response).type('application/json');
 
             } else {
                 server.methods.db.updateUserPassword(email, passwordDetails.new_password);
                 let response = apiResponse.constructApiResponse(200, 200, 'Password updated.');
-                reply(response);
+                reply(response).type('application/json');
             }
         });
     };
@@ -141,10 +141,10 @@ const changePassword = function (request, reply) {
     server.methods.db.getUserDetails(email, function (err, obj) {
         if (err) {
             server.log('error', '/user/' + email + '/password ' + err);
-            reply(apiResponse.getUnexpectedApiError());
+            reply(apiResponse.getUnexpectedApiError()).type('application/json');
 
         } else if (obj == null) {
-            reply(apiResponse.getUserNonExistentError());
+            reply(apiResponse.getUserNonExistentError()).type('application/json');
 
         } else {
             // Check if old_password matches the stored current user password in database
@@ -152,7 +152,7 @@ const changePassword = function (request, reply) {
                 if (err || res == false) {
                     let response = apiResponse.constructApiErrorResponse(400, 400, 'Password invalid.');
                     server.log('error', '/user/' + email + '/password ' + response);
-                    reply(response);
+                    reply(response).type('application/json');
                 } else {
                     checkNewPassword(); // password matched
                 }

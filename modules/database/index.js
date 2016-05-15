@@ -14,7 +14,7 @@ redisClient.on("error", function (err) {
 
 /** 
  * Create user session with expiry of 30 minutes.
- * @param headers The request header object containing 'GoClassToken', 'GoClassDevice', and 'GoClassVersion'.
+ * @param headers The request header object containing 'Token', 'Device', and 'Version'.
  */
 const createUserSession = function (headers, userEmail) {
     const entityId = utils.hmacMd5Encrypt(JSON.stringify(userEmail));
@@ -24,8 +24,8 @@ const createUserSession = function (headers, userEmail) {
     let sessionData = {
         'entityId': entityId,
         'email': userEmail,
-        'device': headers.goclassdevice,
-        'version': headers.goclassversion,
+        'device': headers.device,
+        'version': headers.version,
         'dateCreated': dateNow
     };
 
@@ -34,8 +34,8 @@ const createUserSession = function (headers, userEmail) {
     redisClient.HMSET('session:' + sessionToken, {
         'entityId': entityId,
         'email': userEmail,
-        'device': headers.goclassdevice,
-        'version': headers.goclassversion,
+        'device': headers.device,
+        'version': headers.version,
         'dateCreated': dateNow
     });
     
@@ -51,12 +51,12 @@ const createUserSession = function (headers, userEmail) {
 
 /**
  * Get user session stored in database. Return null/empty if no session found.
- * @param headers The request header object containing 'GoClassToken', 'GoClassDevice', and 'GoClassVersion'.
+ * @param headers The request header object containing 'Token', 'Device', and 'Version'.
  * @param userEmail The User's email that will be used for searching if there's an existing session token.
  * @returns The session token String.
  */
 const getUserSession = function (headers, userEmail, cb) {
-    let sessionToken = headers.goclasstoken;
+    let sessionToken = headers.token;
     
     if (sessionToken != null) {
         redisClient.hgetall('session:' + sessionToken, function (err, obj) {

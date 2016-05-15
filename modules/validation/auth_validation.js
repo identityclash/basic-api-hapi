@@ -6,7 +6,7 @@ const headerValidation = require('./header_validation');
 const utils = require('../../utility/util');
 
 /**
- * Check request header that contains 'GoClassToken', 'GoClassDevice', 'GoClassVersion' for session
+ * Check request header that contains 'Token', 'Device', 'Version' for session
  * @param userEmail The User email of Client.
  * @param headers The request headers sent by client containing device and version.
  * @param cb The callback of where to pass err if no session found.
@@ -19,9 +19,9 @@ const validateSession = function (server, headers, cb) {
     
     headerValidation.validateHeaders(headers, function(err) {
         if (err) {
-            cb(err);// no headers of 'GoClassDevice' && 'GoClassVersion'
+            cb(err);// no headers of 'Device' && 'Version'
         } else {
-            const headerSession = headers.goclasstoken;
+            const headerSession = headers.token;
             
             if (!headerSession) {
                 cb(err);// session empty details empty
@@ -49,7 +49,7 @@ const validateSession = function (server, headers, cb) {
 
 /**
  * Check if User authentication is valid for login.
- * @param headers The request header object containing 'GoClassDevice' and 'GoClassVersion'.
+ * @param headers The request header object containing 'Device' and 'Version'.
  * @param payload The JSON String of credentials object. i.e 
  * {
  *  'email':'dummy@gmail.com',
@@ -69,7 +69,7 @@ const validateAuth = function (server, headers, payload, cb) {
 
     headerValidation.validateHeaders(headers, function(err) {
         if (err) {
-            cb(err, payload);// no headers of 'GoClassDevice' && 'GoClassVersion'
+            cb(err, payload);// no headers of 'Device' && 'Version'
         } else {
             if (!payload) {
                 cb(apiError, payload);// credentials details empty

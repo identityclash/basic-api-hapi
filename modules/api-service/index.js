@@ -10,9 +10,9 @@ const scheme = function (server, options) {
         authenticate: function (request, reply) {
 
             const req = request.raw.req;
-            const sessionToken = req.headers.goclasstoken;
-            const device = req.headers.goclassdevice;
-            const version = req.headers.goclassversion;
+            const sessionToken = req.headers.token;
+            const device = req.headers.device;
+            const version = req.headers.version;
             
             if (!sessionToken) {
                 return reply(apiResponse.constructApiErrorResponse(401, 401, 'Unauthorized'));
@@ -38,8 +38,8 @@ const scheme = function (server, options) {
 
 exports.register = function (server, options, next) {
 
-    server.auth.scheme('goclassauthscheme', scheme);
-    server.auth.strategy('goclassauth', 'goclassauthscheme');
+    server.auth.scheme('authscheme', scheme);
+    server.auth.strategy('auth', 'authscheme');
 
     const apiAuth = require('./api_auth');
     const apiUser = require('./api_user');
@@ -63,7 +63,7 @@ exports.register = function (server, options, next) {
         method: 'GET',
         path: '/user/{email}',
         config: {
-            auth: 'goclassauth',
+            auth: 'auth',
             handler: apiUser.userGetDetails
         }
     });
@@ -73,7 +73,7 @@ exports.register = function (server, options, next) {
         method: 'POST',
         path: '/user/{email}',
         config: {
-            auth: 'goclassauth',
+            auth: 'auth',
             handler: apiUser.userUpdateDetails
         }
     });
@@ -83,7 +83,7 @@ exports.register = function (server, options, next) {
         method: 'POST',
         path: '/user/{email}/password',
         config: {
-            auth: 'goclassauth',
+            auth: 'auth',
             handler: apiUser.userChangePassword
         }
     });

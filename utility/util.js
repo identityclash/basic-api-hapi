@@ -24,12 +24,12 @@ const base64Decrypt = function base64Decrypt(base64) {
 };
 
 const hmacMd5Encrypt = function hmacMd5Encrypt(rawStr) {
-    var hash = CryptoJS.HmacMD5(rawStr, 'goclass-api-v1');
+    var hash = CryptoJS.HmacMD5(rawStr, 'testkey-api-v1');
     return hash.toString();
 };
 
 const aesEncrypt = function aesEncrypt(rawStr) {
-    var hash = CryptoJS.AES.encrypt(JSON.stringify(sessionData), 'goclass-api-v1');
+    var hash = CryptoJS.AES.encrypt(JSON.stringify(sessionData), 'testkey-api-v1');
     return hash;
 };
 

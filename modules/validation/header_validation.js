@@ -9,9 +9,9 @@ const validateHeaders = function(headers, cb) {
     if (!headers || headers == null || headers == undefined) {
         cb(apiError);
     } else {
-        if (headers.goclassdevice == undefined || headers.goclassversion == undefined ||
-                headers.goclassdevice == null || headers.goclassversion == null ||
-                !headers.goclassdevice || !headers.goclassversion) {
+        if (headers.device == undefined || headers.version == undefined ||
+                headers.device == null || headers.version == null ||
+                !headers.device || !headers.version) {
             cb(apiError);
         } else {
             cb(null);
@@ -20,5 +20,5 @@ const validateHeaders = function(headers, cb) {
 };
 
 module.exports = {
-    validateHeaders : validateHeaders
+    validateHeaders: validateHeaders
 };
