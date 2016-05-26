@@ -1,9 +1,8 @@
 'use strict';
 
 const Bcryptjs = require('bcryptjs');
-
-const headerValidation = require('./header_validation');
-const utils = require('../../utility/util');
+const Lodash = require('lodash');
+const HeaderValidation = require('./header_validation');
 
 /**
  * Check request header that contains 'Token', 'Device', 'Version' for session
@@ -12,28 +11,27 @@ const utils = require('../../utility/util');
  * @param cb The callback of where to pass err if no session found.
  */
 const validateSession = function (server, headers, cb) {
-    let err = {
-        error_code: 401,
-        error_message: 'Unauthorized access.'
-    };
-    
-    headerValidation.validateHeaders(headers, function(err) {
+    HeaderValidation.validateHeaders(headers, (err) => {
         if (err) {
-            cb(err);// no headers of 'Device' && 'Version'
+            cb(err);
         } else {
             const headerSession = headers.token;
-            
             if (!headerSession) {
-                cb(err);// session empty details empty
-                
+                let err = {
+                    errorCode: 401,
+                    errorMessage: 'Unauthorized access.'
+                };
+                cb(err);
             } else {
-                server.methods.db.getUserSession(headers, null, function (err, reply) {
+                server.methods.db.getUserSession(headers, null, (err, reply) => {
                     if (err || reply == null || reply == undefined) {
                         cb(err);
                     } else if (reply.toString()) {
                         let storedSession = reply.toString();
-                        if (utils.compareStrings(headerSession, storedSession)) {
-                            // refresh session expiry if valid and existing
+
+                        // Refresh session expiry if valid and existing
+
+                        if (Lodash.isEqual(headerSession, storedSession)) {
                             server.methods.db.refreshSessionExpiry(reply.toString());
                             cb(null);
                         } else {
@@ -41,7 +39,6 @@ const validateSession = function (server, headers, cb) {
                         }
                     }
                 });
-                
             }
         }
     });
@@ -50,7 +47,7 @@ const validateSession = function (server, headers, cb) {
 /**
  * Check if User authentication is valid for login.
  * @param headers The request header object containing 'Device' and 'Version'.
- * @param payload The JSON String of credentials object. i.e 
+ * @param payload The JSON String of credentials object. i.e
  * {
  *  'email':'dummy@gmail.com',
  *  'password':'P@ssw0rd!',
@@ -60,50 +57,49 @@ const validateSession = function (server, headers, cb) {
  */
 const validateAuth = function (server, headers, payload, cb) {
     let apiError = {
-        error_code: 400,
-        error_message: 'Invalid login'
+        errorCode: 400,
+        errorMessage: 'Invalid login'
     };
 
-    // credentials contains "email","password","role"
+    // Credentials contains "email","password","role"
     let credentials = JSON.parse(payload);
 
-    headerValidation.validateHeaders(headers, function(err) {
+    HeaderValidation.validateHeaders(headers, (err) => {
         if (err) {
-            cb(err, payload);// no headers of 'Device' && 'Version'
+            cb(err, payload);
         } else {
             if (!payload) {
-                cb(apiError, payload);// credentials details empty
+                cb(apiError, payload);
             } else {
-                let passwordChecked = function() {
+                let passwordChecked = function () {
                     let session = '';
-                    server.methods.db.getUserSession(headers, credentials.email, function (err, reply) {
+                    server.methods.db.getUserSession(headers, credentials.email, (err, reply) => {
                         if (err || reply == null || reply == undefined) {
-                            // create session if no existing
+                            // Create session if no existing
                             session = server.methods.db.createUserSession(headers, credentials.email);
                             cb(null, session);
                         } else if (reply.toString()) {
                             session = reply.toString();
-                            // refresh session expiry if existing
+                            // Refresh session expiry if existing
                             server.methods.db.refreshSessionExpiry(session);
                             cb(null, session);
                         }
                     });
                 };
-                
-                server.methods.db.getUserDetails(credentials.email, function (err, obj) {
+                server.methods.db.getUserDetails(credentials.email, (err, obj) => {
                     if (err) {
-                        cb(apiError, payload);    
+                        cb(apiError, payload);
                     } else if (obj == null) {
                         cb(apiError, payload);
                     } else {
                         let hashPwd = obj.password;
-                        Bcryptjs.compare(credentials.password, hashPwd, function(err, res) {
+                        Bcryptjs.compare(credentials.password, hashPwd, (err, res) => {
                             if (err || res == false) {
-                                // password did not matched, throw err
+                                // Password did not matched, throw err
                                 cb(apiError, payload);
                             } else {
-                                // password matched
-                                passwordChecked(); 
+                                // Password matched
+                                passwordChecked();
                             }
                         });
                     }

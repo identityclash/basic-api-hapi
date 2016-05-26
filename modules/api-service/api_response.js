@@ -7,12 +7,12 @@ const Boom = require('boom');
  * @param httpStatus The standard http status code. i.e 400
  * @param apiStatusCode The API status code.
  * @param msg The API response message of status code.
- */ 
+ */
 const constructApiResponse = function (httpStatus, apiStatusCode, msg) {
     let response = {
-        'statusCode': httpStatus,
-        'message': msg
-    }
+        statusCode: httpStatus,
+        message: msg
+    };
     return response;
 };
 
@@ -21,9 +21,9 @@ const constructApiResponse = function (httpStatus, apiStatusCode, msg) {
  * @param httpStatus The standard http status code. i.e 400
  * @param apiStatusCode The API status code.
  * @param msg The API response message of status code.
- */ 
+ */
 const constructApiErrorResponse = function (httpStatus, apiStatusCode, msg) {
-    var error = Boom.create(httpStatus, msg, { timestamp: Date.now() });
+    let error = Boom.create(httpStatus, msg, { timestamp: Date.now() });
     error.output.payload.statusCode = apiStatusCode;
     error.output.payload.message = msg;
     return error;

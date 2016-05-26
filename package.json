@@ -2,7 +2,7 @@
   "name": "goclass-server",
   "version": "1.0.0",
   "description": "GoClass Server",
-  "main": "server.js",
+  "main": "server/server.js",
   "scripts": {
     "test": "make test"
   },
@@ -16,11 +16,13 @@
     "bcryptjs": "^2.3.0",
     "crypto-js": "^3.1.6",
     "glue": "^3.2.0",
-    "good": "^6.6.0",
-    "good-console": "^5.3.1",
+    "good": "^7.0.1",
+    "good-console": "^6.1.1",
+    "good-squeeze": "^3.0.1",
     "hapi": "^13.3.0",
     "hapi-auth-basic": "^4.1.0",
     "inert": "^3.2.0",
+    "lodash": "^4.13.1",
     "redis": "^2.6.0-1",
     "validator": "^5.2.0"
   }

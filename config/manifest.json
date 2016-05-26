@@ -9,12 +9,35 @@
 	"registrations": [
 		{
 			"plugin": {
-				"register": "./modules/database"
+				"register": "../modules/database"
 			}
 		},
 		{
 			"plugin": {
-				"register": "./modules/api-service"
+				"register": "../modules/api-service"
+			}
+		},
+		{
+			"plugin": {
+				"register": "good",
+				"options": {
+					"reporters": {
+						"console": [
+							{
+								"module": "good-squeeze",
+								"name": "Squeeze",
+								"args": [{
+									"ops": "*",
+									"log": "*",
+									"error": "*",
+									"response": "*"
+								}]
+							},
+							{ "module": "good-console" },
+							"stdout"
+						]
+					}
+				}
 			}
 		}
 	]

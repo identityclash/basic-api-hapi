@@ -1,72 +1,66 @@
 'use strict';
 
 const Bcryptjs = require('bcryptjs');
-
-const apiResponse = require('./api_response');
-const headerValidation = require('../validation/header_validation');
-const userValidation = require('../validation/user_validation');
+const ApiResponse = require('./api_response');
+const HeaderValidation = require('../validation/header_validation');
+const UserValidation = require('../validation/user_validation');
 
 const register = function (request, reply) {
 
     const server = request.server;
-	        
-    headerValidation.validateHeaders(request.headers, function(err) {
+    HeaderValidation.validateHeaders(request.headers, (err) => {
         if (err) {
-            // no headers of 'Device' && 'Version'
-            let response = apiResponse.constructApiErrorResponse(400, err.error_code, err.error_message);
+            let response = ApiResponse.constructApiErrorResponse(400, err.errorCode, err.errorMessage);
             server.log('error', '/user/register ' + response);
             reply(response).type('application/json');
-                    
         } else {
             let user = request.payload;
 
-            // validate user details password for registration
-            let checkPassword = function () {
+            // Validate user details password for registration
+
+            let checkPassword = () => {
+
                 let userDetails = JSON.parse(user);
-                userValidation.validatePassword(userDetails.password, function (err, result) {
+                UserValidation.validatePassword(userDetails.password, (err) => {
+
                     if (err) {
-                        let response = apiResponse.constructApiErrorResponse(400, err.error_code, err.error_message);
+                        let response = ApiResponse.constructApiErrorResponse(400, err.errorCode, err.errorMessage);
                         server.log('error', '/user/register ' + response);
                         reply(response).type('application/json');
-                        
                     } else {
                         server.methods.db.writeUserDetails(userDetails);
-                        let response = apiResponse.constructApiResponse(201, 201, userDetails.name + ' registered');
+                        let response = ApiResponse.constructApiResponse(201, 201, userDetails.name + ' registered');
                         reply(response).type('application/json');
-                        
                     }
                 });
             };
 
-            // validate user details for registration
-            userValidation.validateUserDetails(user, function (err, result) {
+            // Validate user details for registration
+
+            UserValidation.validateUserDetails(user, (err) => {
+
                 if (err) {
-                    let response = apiResponse.constructApiErrorResponse(400, err.error_code, err.error_message);
+                    let response = ApiResponse.constructApiErrorResponse(400, err.errorCode, err.errorMessage);
                     server.log('error', '/user/register ' + response);
                     reply(response).type('application/json');
-                    
                 } else {
                     checkPassword();
-                    
                 }
-            });   
-             
+            });
         }
     });
 };
 
-
 const getDetails = function (request, reply) {
-
     const server = request.server;
-
     let userEmail = encodeURIComponent(request.params.email);
-    server.methods.db.getUserDetails(decodeURIComponent(userEmail), function (err, obj) {
+    server.methods.db.getUserDetails(decodeURIComponent(userEmail), (err, obj) => {
+
         if (err) {
-            server.log('error', '/user/' + request.params.email + " " + err);
-            reply(apiResponse.getUnexpectedApiError()).type('application/json');
+            server.log('error', '/user/' + request.params.email + ' ' + err);
+            reply(ApiResponse.getUnexpectedApiError()).type('application/json');
         } else if (obj == null) {
-            reply(apiResponse.getUserNonExistentError());
+            reply(ApiResponse.getUserNonExistentError());
         } else {
             delete obj.password;// remove 'password' property in response
             reply(JSON.stringify(obj)).type('application/json');
@@ -74,36 +68,36 @@ const getDetails = function (request, reply) {
     });
 };
 
-
 const updateDetails = function (request, reply) {
-
     const server = request.server;
-
     let userMod = JSON.parse(request.payload);
     let email = request.params.email;
 
-    // validate and update user details if exists
-    let updateUserDetails = function (user) {
-        userValidation.validateUserDetails(JSON.stringify(user), function (err, result) {
+    // Validate and update user details if exists
+
+    let updateUserDetails = (user) => {
+        UserValidation.validateUserDetails(JSON.stringify(user), (err) => {
+
             if (err) {
-                let response = apiResponse.constructApiErrorResponse(400, err.error_code, err.error_message);
-                server.log('error', '/user/' + request.params.email + " " + response);
+                let response = ApiResponse.constructApiErrorResponse(400, err.errorCode, err.errorMessage);
+                server.log('error', '/user/' + request.params.email + ' ' + response);
                 reply(response).type('application/json');
             } else {
                 server.methods.db.updateUserDetails(user);
-                let response = apiResponse.constructApiResponse(200, 200, 'User updated.');
+                let response = ApiResponse.constructApiResponse(200, 200, 'User updated.');
                 reply(response).type('application/json');
             }
         });
     };
 
-    // check first if User exists
-    server.methods.db.getUserDetails(email, function (err, obj) {
+    // Check first if User exists
+
+    server.methods.db.getUserDetails(email, (err, obj) => {
         if (err) {
-            server.log('error', '/user/' + email + " " + err);
-            reply(apiResponse.getUnexpectedApiError()).type('application/json');
+            server.log('error', '/user/' + email + ' ' + err);
+            reply(ApiResponse.getUnexpectedApiError()).type('application/json');
         } else if (obj == null) {
-            reply(apiResponse.getUserNonExistentError()).type('application/json');
+            reply(ApiResponse.getUserNonExistentError()).type('application/json');
         } else {
             // set fields that should NOT be updated
             userMod.email = obj.email;
@@ -115,49 +109,50 @@ const updateDetails = function (request, reply) {
 
 
 const changePassword = function (request, reply) {
-
     const server = request.server;
-
-    let passwordDetails = JSON.parse(request.payload);// contains 'old_password' and 'new_password'
+    let passwordDetails = JSON.parse(request.payload);
     let email = request.params.email;
 
     // Check if new_password is valid
-    let checkNewPassword = function () {
-        userValidation.validatePassword(passwordDetails.new_password, function (err, result) {
+
+    let checkNewPassword = () => {
+        UserValidation.validatePassword(passwordDetails.new_password, (err) => {
+
             if (err) {
-                let response = apiResponse.constructApiErrorResponse(400, err.error_code, err.error_message);
+                let response = ApiResponse.constructApiErrorResponse(400, err.errorCode, err.errorMessage);
                 server.log('error', '/user/' + email + '/password ' + response);
                 reply(response).type('application/json');
 
             } else {
                 server.methods.db.updateUserPassword(email, passwordDetails.new_password);
-                let response = apiResponse.constructApiResponse(200, 200, 'Password updated.');
+                let response = ApiResponse.constructApiResponse(200, 200, 'Password updated.');
                 reply(response).type('application/json');
             }
         });
     };
 
-    // check first if User exists
-    server.methods.db.getUserDetails(email, function (err, obj) {
+    // Check first if User exists
+
+    server.methods.db.getUserDetails(email, (err, obj) => {
         if (err) {
             server.log('error', '/user/' + email + '/password ' + err);
-            reply(apiResponse.getUnexpectedApiError()).type('application/json');
-
+            reply(ApiResponse.getUnexpectedApiError()).type('application/json');
         } else if (obj == null) {
-            reply(apiResponse.getUserNonExistentError()).type('application/json');
-
+            reply(ApiResponse.getUserNonExistentError()).type('application/json');
         } else {
+
             // Check if old_password matches the stored current user password in database
-            Bcryptjs.compare(passwordDetails.old_password, obj.password, function (err, res) {
+
+            Bcryptjs.compare(passwordDetails.old_password, obj.password, (err, res) => {
+
                 if (err || res == false) {
-                    let response = apiResponse.constructApiErrorResponse(400, 400, 'Password invalid.');
+                    let response = ApiResponse.constructApiErrorResponse(400, 400, 'Password invalid.');
                     server.log('error', '/user/' + email + '/password ' + response);
                     reply(response).type('application/json');
                 } else {
-                    checkNewPassword(); // password matched
+                    checkNewPassword();
                 }
             });
-
         }
     });
 };
