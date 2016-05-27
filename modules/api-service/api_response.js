@@ -48,9 +48,17 @@ const getUserNonExistentError = function () {
     return error;
 };
 
+const getEmailAlreadyExistError = function () {
+    let msg = 'Email already taken.';
+    let error = Boom.badRequest(msg);
+    error.output.payload.message = msg;
+    return error;
+};
+
 module.exports = {
     constructApiResponse: constructApiResponse,
     constructApiErrorResponse: constructApiErrorResponse,
     getUnexpectedApiError: getUnexpectedApiError,
-    getUserNonExistentError: getUserNonExistentError
+    getUserNonExistentError: getUserNonExistentError,
+    getEmailAlreadyExistError: getEmailAlreadyExistError
 };

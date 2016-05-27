@@ -35,6 +35,24 @@ const register = function (request, reply) {
                 });
             };
 
+            // Check if email is already registered
+            let checkIfEmailExists = (email) => {
+
+                server.methods.db.getUserDetails(email, (err, obj) => {
+                    if (err) {
+                        const response = ApiResponse.getUnexpectedApiError();
+                        server.log('error', '/user/register ' + response);
+                        reply(response);
+                    } else if (obj) {
+                        const response = ApiResponse.getEmailAlreadyExistError();
+                        server.log('error', '/user/register ' + response);
+                        reply(response);
+                    } else {
+                        checkPassword();
+                    }
+                });
+            };
+
             // Validate user details for registration
 
             UserValidation.validateUserDetails(user, (err) => {
@@ -44,7 +62,8 @@ const register = function (request, reply) {
                     server.log('error', '/user/register ' + response);
                     reply(response).type('application/json');
                 } else {
-                    checkPassword();
+                    let userDetails = JSON.parse(user);
+                    checkIfEmailExists(userDetails.email);
                 }
             });
         }
