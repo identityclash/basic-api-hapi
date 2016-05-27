@@ -10,7 +10,7 @@ const options = {
 Glue.compose(manifest, options, function (err, server) {
 
 	if (err) {
-		throw err; // something bad happened loading the plugin
+		throw err;
 	}
 
 	server.start((err) => {

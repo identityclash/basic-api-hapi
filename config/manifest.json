@@ -9,12 +9,25 @@
 	"registrations": [
 		{
 			"plugin": {
-				"register": "../modules/database"
+				"register": "./authentication"
 			}
 		},
 		{
 			"plugin": {
-				"register": "../modules/api-service"
+				"register": "acquaint",
+				"options": {
+					"methods": [
+						{ "includes": ["server/method/response/*js"] },
+						{ "includes": ["server/method/db/*.js"] },
+						{ "includes": ["server/method/validation/*.js"] }
+					],
+					"handlers": [
+						{ "includes": ["server/handler/**/*.js"] }
+					],
+					"routes": [
+						{ "includes": ["server/route/**/*.js"] }
+					]
+				}
 			}
 		},
 		{

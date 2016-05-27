@@ -2,7 +2,6 @@
 
 const Bcryptjs = require('bcryptjs');
 const Lodash = require('lodash');
-const HeaderValidation = require('./header_validation');
 
 /**
  * Check request header that contains 'Token', 'Device', 'Version' for session
@@ -11,7 +10,10 @@ const HeaderValidation = require('./header_validation');
  * @param cb The callback of where to pass err if no session found.
  */
 const validateSession = function (server, headers, cb) {
-    HeaderValidation.validateHeaders(headers, (err) => {
+    
+    const headerValidator = server.methods.validationHeader;
+    
+    headerValidator.validateHeaders(headers, (err) => {
         if (err) {
             cb(err);
         } else {
@@ -23,7 +25,7 @@ const validateSession = function (server, headers, cb) {
                 };
                 cb(err);
             } else {
-                server.methods.db.getUserSession(headers, null, (err, reply) => {
+                server.methods.dbQuery.getUserSession(headers, null, (err, reply) => {
                     if (err || reply == null || reply == undefined) {
                         cb(err);
                     } else if (reply.toString()) {
@@ -32,8 +34,9 @@ const validateSession = function (server, headers, cb) {
                         // Refresh session expiry if valid and existing
 
                         if (Lodash.isEqual(headerSession, storedSession)) {
-                            server.methods.db.refreshSessionExpiry(reply.toString());
-                            cb(null);
+                            server.methods.dbQuery.refreshSessionExpiry(reply.toString(), (err, obj) => {
+                                cb(err);
+                            });
                         } else {
                             cb(err);
                         }
@@ -63,30 +66,41 @@ const validateAuth = function (server, headers, payload, cb) {
 
     // Credentials contains "email","password","role"
     let credentials = JSON.parse(payload);
+    
+    const headerValidator = server.methods.validationHeader;
 
-    HeaderValidation.validateHeaders(headers, (err) => {
+    headerValidator.validateHeaders(headers, (err) => {
+        
         if (err) {
             cb(err, payload);
         } else {
             if (!payload) {
                 cb(apiError, payload);
             } else {
+                
+                const device = headers.device;
+                const version = headers.version;
+                const token = headers.token;
+                
                 let passwordChecked = function () {
                     let session = '';
-                    server.methods.db.getUserSession(headers, credentials.email, (err, reply) => {
+                    server.methods.dbQuery.getUserSession(token, credentials.email, (err, reply) => {
                         if (err || reply == null || reply == undefined) {
                             // Create session if no existing
-                            session = server.methods.db.createUserSession(headers, credentials.email);
-                            cb(null, session);
+                            server.methods.dbQuery.createUserSession(device, version, credentials.email, (err, obj) => {
+                                cb(err, obj);
+                            });
                         } else if (reply.toString()) {
                             session = reply.toString();
                             // Refresh session expiry if existing
-                            server.methods.db.refreshSessionExpiry(session);
-                            cb(null, session);
+                            server.methods.dbQuery.refreshSessionExpiry(session, (err, obj) => {
+                                cb(err, session); 
+                            });
                         }
                     });
                 };
-                server.methods.db.getUserDetails(credentials.email, (err, obj) => {
+                
+                server.methods.dbQuery.getUserDetails(credentials.email, (err, obj) => {
                     if (err) {
                         cb(apiError, payload);
                     } else if (obj == null) {

@@ -12,6 +12,7 @@
   "author": "Roxxy Rafael",
   "license": "MIT",
   "dependencies": {
+    "acquaint": "^1.0.0",
     "bcrypt": "^0.8.5",
     "bcryptjs": "^2.3.0",
     "crypto-js": "^3.1.6",

@@ -1,8 +1,8 @@
 {
-  "name": "api-service",
+  "name": "authentication",
   "version": "1.0.0",
   "description": "REST API",
-  "main": "index.js",
+  "main": "authentication.js",
   "scripts": {
     "test": "make test"
   },
