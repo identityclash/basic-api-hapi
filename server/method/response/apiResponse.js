@@ -52,7 +52,7 @@ const getEmailAlreadyExistError = function () {
     let msg = 'Email already taken.';
     let error = Boom.badRequest(msg);
     error.output.payload.message = msg;
-    return error;  
+    return error;
 };
 
 module.exports = {

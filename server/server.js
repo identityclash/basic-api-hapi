@@ -2,22 +2,22 @@
 
 const Glue = require('glue');
 
-const manifest = require('../config/manifest.json');
+const Manifest = require('../config/manifest.json');
 const options = {
-  relativeTo: __dirname
+    relativeTo: __dirname
 };
 
-Glue.compose(manifest, options, function (err, server) {
+Glue.compose(Manifest, options, (err, server) => {
 
-	if (err) {
-		throw err;
-	}
+    if (err) {
+        throw err;
+    }
 
-	server.start((err) => {
+    server.start((err) => {
 
-		if (err) {
-			throw err;
-		}
-		server.log('info', 'server running at: ' + server.info.uri);
-	});
+        if (err) {
+            throw err;
+        }
+        server.log('info', 'server running at: ' + server.info.uri);
+    });
 });

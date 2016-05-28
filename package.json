@@ -1,10 +1,12 @@
 {
-  "name": "goclass-server",
+  "name": "basic-api-hapi",
   "version": "1.0.0",
-  "description": "GoClass Server",
+  "description": "Sample REST API implementation of Hapi",
   "main": "server/server.js",
   "scripts": {
-    "test": "make test"
+    "start": "node index.js",
+    "test": "lab -v -L -a code -c",
+    "test-cover": "lab --coverage-exclude public -v -L -a code -c -r html -o ./coverage.html -L && open ./coverage.html"
   },
   "keywords": [
     "GoClass"
@@ -15,6 +17,7 @@
     "acquaint": "^1.0.0",
     "bcrypt": "^0.8.5",
     "bcryptjs": "^2.3.0",
+    "code": "^3.0.0",
     "crypto-js": "^3.1.6",
     "glue": "^3.2.0",
     "good": "^7.0.1",
@@ -23,6 +26,7 @@
     "hapi": "^13.3.0",
     "hapi-auth-basic": "^4.1.0",
     "inert": "^3.2.0",
+    "lab": "^10.7.1",
     "lodash": "^4.13.1",
     "redis": "^2.6.0-1",
     "validator": "^5.2.0"

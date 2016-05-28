@@ -5,11 +5,11 @@ const validateHeaders = function (headers, cb) {
         errorCode: 400,
         errorMessage: 'Invalid headers. Required device and version.'
     };
-    if (!headers || headers == null || headers == undefined) {
+    if (!headers || headers === null || headers === undefined) {
         cb(apiError);
     } else {
-        if (headers.device == undefined || headers.version == undefined ||
-            headers.device == null || headers.version == null ||
+        if (headers.device === undefined || headers.version === undefined ||
+            headers.device === null || headers.version === null ||
             !headers.device || !headers.version) {
             cb(apiError);
         } else {

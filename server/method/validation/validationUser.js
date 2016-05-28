@@ -3,20 +3,20 @@
 const Validator = require('validator');
 
 function isNameValid(name) {
-    let isNameValid = true;
-    if (!name || name == null || name == undefined) {
-        isNameValid = false;
+
+    if (!name || name === null || name === undefined) {
+        return false;
     } else {
         let trimmedName = Validator.trim(name);
         let tokenizeName = trimmedName.split(' ');
         for (let i = 0; i < tokenizeName.length; i++) {
             if (!Validator.isAlpha(tokenizeName[i])) {
-                isNameValid = false;
+                return false;
                 break;
             }
         }
     }
-    return isNameValid;
+    return true;
 }
 
 function isEmailvalid(email) {
@@ -35,7 +35,7 @@ function isBirthdateValid(birthday) {
     minBday.setYear(minBday.getYear() - 50);// 50 yrs old, max allowed age
     maxBday.setYear(minBday.getYear() - 18);// 18 yrs old, minimum allowed age
 
-    let bdayStr = birthday + '';
+    let bdayStr = String(birthday);
 
     if (!Validator.isBefore(bdayStr, minBday.toString()) &&
         !Validator.isAfter(bdayStr, maxBday.toString())) {

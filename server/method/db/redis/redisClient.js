@@ -37,7 +37,7 @@ const createUserSession = function (device, version, userEmail, cb) {
     });
     redisClient.set('session:email:' + entityId, sessionToken);
 
-    const expiryDuration = parseInt((+new Date) / 1000) + 1800;// 30minutes ahead of current time
+    const expiryDuration = parseInt((Number(new Date)) / 1000) + 1800;// 30minutes ahead of current time
     redisClient.expireat('session:' + sessionToken, expiryDuration);
     redisClient.expireat('session:email:' + entityId, expiryDuration);
 
@@ -52,15 +52,15 @@ const createUserSession = function (device, version, userEmail, cb) {
  */
 const getUserSession = function (token, userEmail, cb) {
     let sessionToken = token;
-    if (sessionToken != null) {
+    if (sessionToken !== null) {
         redisClient.hgetall('session:' + sessionToken, function (err, obj) {
-            if (err || obj == null) {
+            if (err || obj === null) {
                 cb(err, obj);
             } else {
                 cb(err, sessionToken);
             }
         });
-    } else if (userEmail != null) {
+    } else if (userEmail !== null) {
         const entityId = Utils.hmacMd5Encrypt(JSON.stringify(userEmail));
         redisClient.get('session:email:' + entityId, function (err, obj) {
             cb(err, obj);
@@ -75,7 +75,7 @@ const getUserSession = function (token, userEmail, cb) {
 const refreshSessionExpiry = function (sessionToken, cb) {
     redisClient.hgetall('session:' + sessionToken, function (err, obj) {
         const entityId = obj.entityId;
-        const expiryDuration = parseInt((+new Date) / 1000) + 1800;// 30minutes ahead of current time
+        const expiryDuration = parseInt((Number(new Date)) / 1000) + 1800;// 30minutes ahead of current time
         redisClient.expireat('session:' + sessionToken, expiryDuration);
         redisClient.expireat('session:email:' + entityId, expiryDuration);
     });

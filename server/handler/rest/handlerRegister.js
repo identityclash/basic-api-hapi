@@ -1,9 +1,9 @@
 'use strict';
 
 module.exports = () => {
-        
+
     return (request, reply) => {
-        
+
         const server = request.server;
         const headerValidator = server.methods.validationHeader;
         const userValidator = server.methods.validationUser;
@@ -33,6 +33,7 @@ module.exports = () => {
                         } else {
                             server.methods.dbQuery.writeUserDetails(userDetails, (err, obj) => {
                                 if (err) {
+                                    const response = apiResponse.getUnexpectedApiError();
                                     server.log('error', '/user/register ' + response);
                                     reply(response);
                                 } else {
@@ -45,7 +46,7 @@ module.exports = () => {
 
                 // Check if email is already registered
                 let checkIfEmailExists = (email) => {
-                    
+
                     server.methods.dbQuery.getUserDetails(email, (err, obj) => {
                         if (err) {
                             const response = apiResponse.getUnexpectedApiError();
@@ -73,6 +74,6 @@ module.exports = () => {
                     }
                 });
             }
-        });  
+        });
     };
 };

@@ -10,9 +10,9 @@ const Lodash = require('lodash');
  * @param cb The callback of where to pass err if no session found.
  */
 const validateSession = function (server, headers, cb) {
-    
+
     const headerValidator = server.methods.validationHeader;
-    
+
     headerValidator.validateHeaders(headers, (err) => {
         if (err) {
             cb(err);
@@ -26,7 +26,7 @@ const validateSession = function (server, headers, cb) {
                 cb(err);
             } else {
                 server.methods.dbQuery.getUserSession(headers, null, (err, reply) => {
-                    if (err || reply == null || reply == undefined) {
+                    if (err || reply === null || reply === undefined) {
                         cb(err);
                     } else if (reply.toString()) {
                         let storedSession = reply.toString();
@@ -66,26 +66,26 @@ const validateAuth = function (server, headers, payload, cb) {
 
     // Credentials contains "email","password","role"
     let credentials = JSON.parse(payload);
-    
+
     const headerValidator = server.methods.validationHeader;
 
     headerValidator.validateHeaders(headers, (err) => {
-        
+
         if (err) {
             cb(err, payload);
         } else {
             if (!payload) {
                 cb(apiError, payload);
             } else {
-                
+
                 const device = headers.device;
                 const version = headers.version;
                 const token = headers.token;
-                
+
                 let passwordChecked = function () {
                     let session = '';
                     server.methods.dbQuery.getUserSession(token, credentials.email, (err, reply) => {
-                        if (err || reply == null || reply == undefined) {
+                        if (err || reply === null || reply === undefined) {
                             // Create session if no existing
                             server.methods.dbQuery.createUserSession(device, version, credentials.email, (err, obj) => {
                                 cb(err, obj);
@@ -94,21 +94,21 @@ const validateAuth = function (server, headers, payload, cb) {
                             session = reply.toString();
                             // Refresh session expiry if existing
                             server.methods.dbQuery.refreshSessionExpiry(session, (err, obj) => {
-                                cb(err, session); 
+                                cb(err, session);
                             });
                         }
                     });
                 };
-                
+
                 server.methods.dbQuery.getUserDetails(credentials.email, (err, obj) => {
                     if (err) {
                         cb(apiError, payload);
-                    } else if (obj == null) {
+                    } else if (obj === null) {
                         cb(apiError, payload);
                     } else {
                         let hashPwd = obj.password;
                         Bcryptjs.compare(credentials.password, hashPwd, (err, res) => {
-                            if (err || res == false) {
+                            if (err || res === false) {
                                 // Password did not matched, throw err
                                 cb(apiError, payload);
                             } else {

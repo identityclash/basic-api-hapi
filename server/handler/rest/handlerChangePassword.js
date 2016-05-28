@@ -44,7 +44,7 @@ module.exports = () => {
             if (err) {
                 server.log('error', '/user/' + email + '/password ' + err);
                 reply(apiResponse.getUnexpectedApiError());
-            } else if (obj == null) {
+            } else if (obj === null) {
                 reply(apiResponse.getUserNonExistentError());
             } else {
 
@@ -52,7 +52,7 @@ module.exports = () => {
 
                 Bcryptjs.compare(passwordDetails.old_password, obj.password, (err, res) => {
 
-                    if (err || res == false) {
+                    if (err || res === false) {
                         let response = apiResponse.constructApiErrorResponse(400, 400, 'Password invalid.');
                         server.log('error', '/user/' + email + '/password ' + response);
                         reply(response);

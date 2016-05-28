@@ -41,7 +41,7 @@ module.exports = () => {
             if (err) {
                 server.log('error', '/user/' + email + ' ' + err);
                 reply(apiResponse.getUnexpectedApiError());
-            } else if (obj == null) {
+            } else if (obj === null) {
                 reply(apiResponse.getUserNonExistentError());
             } else {
                 // set fields that should NOT be updated

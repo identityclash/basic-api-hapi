@@ -13,7 +13,7 @@ module.exports = () => {
             if (err) {
                 server.log('error', '/user/' + request.params.email + ' ' + err);
                 reply(apiResponse.getUnexpectedApiError());
-            } else if (obj == null) {
+            } else if (obj === null) {
                 reply(apiResponse.getUserNonExistentError());
             } else {
                 delete obj.password;// remove 'password' property in response
