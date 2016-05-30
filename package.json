@@ -4,7 +4,7 @@
   "description": "Sample REST API implementation of Hapi",
   "main": "server/server.js",
   "scripts": {
-    "start": "node index.js",
+    "start": "node server/server.js",
     "test": "lab -v -L -a code -c",
     "test-cover": "lab --coverage-exclude public -v -L -a code -c -r html -o ./coverage.html -L && open ./coverage.html"
   },

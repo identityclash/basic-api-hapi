@@ -1,6 +1,7 @@
 'use strict';
 
 const Bcryptjs = require('bcryptjs');
+const Lodash = require('lodash');
 
 module.exports = () => {
 
@@ -44,7 +45,7 @@ module.exports = () => {
             if (err) {
                 server.log('error', '/user/' + email + '/password ' + err);
                 reply(apiResponse.getUnexpectedApiError());
-            } else if (obj === null) {
+            } else if (Lodash.isEmpty(obj)) {
                 reply(apiResponse.getUserNonExistentError());
             } else {
 

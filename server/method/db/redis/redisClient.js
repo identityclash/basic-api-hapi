@@ -2,13 +2,12 @@
 
 const Redis = require('redis');
 const Bcryptjs = require('bcryptjs');
+const Lodash = require('lodash');
 const Utils = require('../../../utility/util');
 
 const redisClient = Redis.createClient();
 
-redisClient.on('error', function (err) {
-    console.log('Error ' + err);
-});
+redisClient.on('error', (err) => { });
 
 /**
  * Create user session with expiry of 30 minutes.
@@ -52,28 +51,26 @@ const createUserSession = function (device, version, userEmail, cb) {
  */
 const getUserSession = function (token, userEmail, cb) {
     let sessionToken = token;
-    if (sessionToken !== null) {
-        redisClient.hgetall('session:' + sessionToken, function (err, obj) {
-            if (err || obj === null) {
-                cb(err, obj);
-            } else {
-                cb(err, sessionToken);
-            }
+    if (!Lodash.isEmpty(sessionToken)) {
+        redisClient.hgetall('session:' + sessionToken, (err, obj) => {
+            cb(err, obj);
         });
-    } else if (userEmail !== null) {
+    } else if (!Lodash.isEmpty(userEmail)) {
         const entityId = Utils.hmacMd5Encrypt(JSON.stringify(userEmail));
-        redisClient.get('session:email:' + entityId, function (err, obj) {
+        redisClient.get('session:email:' + entityId, (err, obj) => {
             cb(err, obj);
         });
     } else {
-        let err = {};
+        let err = {
+            message: 'No passed arguments token or email'
+        };
         cb(err, null);
     }
 };
 
 // Reset user session expiry to 30 minutes
 const refreshSessionExpiry = function (sessionToken, cb) {
-    redisClient.hgetall('session:' + sessionToken, function (err, obj) {
+    redisClient.hgetall('session:' + sessionToken, (err, obj) => {
         const entityId = obj.entityId;
         const expiryDuration = parseInt((Number(new Date)) / 1000) + 1800;// 30minutes ahead of current time
         redisClient.expireat('session:' + sessionToken, expiryDuration);
@@ -88,7 +85,7 @@ const refreshSessionExpiry = function (sessionToken, cb) {
  * @param cb The callback function when User details has been populated.
  */
 const getUserDetails = function (userEmail, cb) {
-    redisClient.hgetall('user:' + userEmail, function (err, obj) {
+    redisClient.hgetall('user:' + userEmail, (err, obj) => {
         cb(err, obj);
     });
 };
@@ -108,7 +105,7 @@ const writeUserDetails = function (user, cb) {
         birthday: user.birthday,
         gender: user.gender,
         password: hashPwd
-    });
+    });//
     cb(null, user);
 };
 
@@ -121,7 +118,7 @@ const updateUserDetails = function (user, cb) {
         name: user.name,
         birthday: user.birthday
     });
-    cb(null, '');
+    cb(null, user);
 };
 
 /**
@@ -135,7 +132,7 @@ const updateUserPassword = function (userEmail, newPassword, cb) {
     redisClient.HMSET('user:' + userEmail, {
         password: hashPwd
     });
-    cb(null, '');
+    cb(null, userEmail);
 };
 
 module.exports = {

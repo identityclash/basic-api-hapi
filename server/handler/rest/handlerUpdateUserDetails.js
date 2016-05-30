@@ -1,5 +1,7 @@
 'use strict';
 
+const Lodash = require('lodash');
+
 module.exports = () => {
 
     return (request, reply) => {
@@ -41,7 +43,7 @@ module.exports = () => {
             if (err) {
                 server.log('error', '/user/' + email + ' ' + err);
                 reply(apiResponse.getUnexpectedApiError());
-            } else if (obj === null) {
+            } else if (Lodash.isEmpty(obj)) {
                 reply(apiResponse.getUserNonExistentError());
             } else {
                 // set fields that should NOT be updated

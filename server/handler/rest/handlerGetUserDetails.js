@@ -1,5 +1,7 @@
 'use strict';
 
+const Lodash = require('lodash');
+
 module.exports = () => {
 
     return (request, reply) => {
@@ -13,7 +15,7 @@ module.exports = () => {
             if (err) {
                 server.log('error', '/user/' + request.params.email + ' ' + err);
                 reply(apiResponse.getUnexpectedApiError());
-            } else if (obj === null) {
+            } else if (Lodash.isEmpty(obj)) {
                 reply(apiResponse.getUserNonExistentError());
             } else {
                 delete obj.password;// remove 'password' property in response
