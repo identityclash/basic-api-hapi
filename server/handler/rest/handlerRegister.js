@@ -15,7 +15,7 @@ module.exports = () => {
 
                 let response = apiResponse.constructApiErrorResponse(400, err.errorCode, err.errorMessage);
                 server.log('error', '/user/register ' + response);
-                reply(response).type('application/json');
+                reply(response);
 
             } else {
                 let user = request.payload;
@@ -61,13 +61,15 @@ module.exports = () => {
                         }
                     });
                 };
-
+                
+                console.log('handlerRegister', user);
+                
                 // Validate user details for registration
                 userValidator.validateUserDetails(user, (err) => {
                     if (err) {
                         let response = apiResponse.constructApiErrorResponse(400, err.errorCode, err.errorMessage);
                         server.log('error', '/user/register ' + response);
-                        reply(response).type('application/json');
+                        reply(response);
                     } else {
                         let userDetails = JSON.parse(user);
                         checkIfEmailExists(userDetails.email);
