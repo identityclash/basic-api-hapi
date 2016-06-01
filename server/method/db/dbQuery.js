@@ -2,14 +2,19 @@
 
 const Lodash = require('lodash');
 const RedisClient = require('./redis/redisClient');
+const Manifest = require('../../manifest');
 
 const dbClient = function () {
-    const dbType = 'redis';
-    let db = RedisClient;
+    
+    const env = Manifest.get('/env');
+    const dbType = Manifest.get('/database', { db: env });
+    
+    let dbRedis = RedisClient;
+    
     if (Lodash.isEqual(dbType, 'redis')) {
-        return db;
+        return dbRedis;
     }
-    return db;
+    return dbRedis;
 };
 
 module.exports = {

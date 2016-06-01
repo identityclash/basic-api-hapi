@@ -70,6 +70,7 @@ const validateUserDetails = function (payload, cb) {
         errorCode: 422,
         errorMessage: 'User details invalid. Must not be empty.'
     };
+    console.log('validateUserDetails', payload);
     let userDetails = JSON.parse(payload);
     if (!payload) {
         // User details empty
