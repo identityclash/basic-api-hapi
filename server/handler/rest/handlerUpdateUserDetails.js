@@ -10,26 +10,28 @@ module.exports = () => {
         const apiResponse = server.methods.apiResponse;
         const userValidator = server.methods.validationUser;
 
-        let userMod = JSON.parse(request.payload);
-        let email = request.params.email;
+        const userMod = request.payload;
+        const email = request.params.email;
 
         // Validate and update user details if exists
 
-        let updateUserDetails = (user) => {
-            userValidator.validateUserDetails(JSON.stringify(user), (err) => {
+        const updateUserDetails = (user) => {
+            userValidator.validateUserDetails(user, (err) => {
 
                 if (err) {
-                    let response = apiResponse.constructApiErrorResponse(400, err.errorCode, err.errorMessage);
+                    const response = apiResponse.constructApiErrorResponse(400, err.errorCode, err.errorMessage);
                     server.log('error', '/user/' + request.params.email + ' ' + response);
                     reply(response);
-                } else {
+                }
+                else {
                     server.methods.dbQuery.updateUserDetails(user, (err, obj) => {
                         if (err) {
-                            let response = apiResponse.getUnexpectedApiError();
+                            const response = apiResponse.getUnexpectedApiError();
                             server.log('error', '/user/' + request.params.email + ' ' + response);
                             reply(response);
-                        } else {
-                            let response = apiResponse.constructApiResponse(200, 200, 'User updated.');
+                        }
+                        else {
+                            const response = apiResponse.constructApiResponse(200, 200, 'User updated.');
                             reply(response);
                         }
                     });
@@ -43,10 +45,12 @@ module.exports = () => {
             if (err) {
                 server.log('error', '/user/' + email + ' ' + err);
                 reply(apiResponse.getUnexpectedApiError());
-            } else if (Lodash.isEmpty(obj)) {
+            }
+            else if (Lodash.isEmpty(obj)) {
                 reply(apiResponse.getUserNonExistentError());
-            } else {
-                // set fields that should NOT be updated
+            }
+            else {
+                // Set fields that should NOT be updated
                 userMod.email = obj.email;
                 userMod.gender = obj.gender;
                 updateUserDetails(userMod);

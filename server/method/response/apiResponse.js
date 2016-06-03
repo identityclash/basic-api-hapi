@@ -9,7 +9,7 @@ const Boom = require('boom');
  * @param msg The API response message of status code.
  */
 const constructApiResponse = function (httpStatus, apiStatusCode, msg) {
-    let response = {
+    const response = {
         statusCode: httpStatus,
         message: msg
     };
@@ -23,7 +23,7 @@ const constructApiResponse = function (httpStatus, apiStatusCode, msg) {
  * @param msg The API response message of status code.
  */
 const constructApiErrorResponse = function (httpStatus, apiStatusCode, msg) {
-    let error = Boom.create(httpStatus, msg, { timestamp: Date.now() });
+    const error = Boom.create(httpStatus, msg, { timestamp: Date.now() });
     error.output.payload.statusCode = apiStatusCode;
     error.output.payload.message = msg;
     return error;
@@ -34,23 +34,23 @@ const constructApiErrorResponse = function (httpStatus, apiStatusCode, msg) {
  * error occured in API calls of client.
  */
 const getUnexpectedApiError = function () {
-    let msg = 'Unexpected API error.';
-    let error = Boom.badImplementation(msg);
+    const msg = 'Unexpected API error.';
+    const error = Boom.badImplementation(msg);
     error.output.payload.message = msg;
     return error;
 };
 
 // Create API response when get User details is not found.
 const getUserNonExistentError = function () {
-    let msg = 'User non-existent.';
-    let error = Boom.notFound(msg);
+    const msg = 'User non-existent.';
+    const error = Boom.notFound(msg);
     error.output.payload.message = msg;
     return error;
 };
 
 const getEmailAlreadyExistError = function () {
-    let msg = 'Email already taken.';
-    let error = Boom.badRequest(msg);
+    const msg = 'Email already taken.';
+    const error = Boom.badRequest(msg);
     error.output.payload.message = msg;
     return error;
 };

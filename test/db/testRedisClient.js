@@ -25,7 +25,8 @@ describe('server/method/db/redis', () => {
         password: '$2a$10$bFpG1q02pctraHp./YqGO.kV6yufToGITE0DYUSnXkA0id6G2w.2G'
     };
 
-    const device = 'Android', version = '1.0.0';
+    const device = 'Android';
+    const version = '1.0.0';
 
     before((done) => {
 
@@ -55,7 +56,7 @@ describe('server/method/db/redis', () => {
 
         RedisClient.getUserSession(sessionToken, null, (err, obj) => {
 
-            expect(err).to.be.null()
+            expect(err).to.be.null();
             expect(obj).to.be.an.object();
         });
         return done();
@@ -65,7 +66,7 @@ describe('server/method/db/redis', () => {
 
         RedisClient.getUserSession(null, user.email, (err, obj) => {
 
-            expect(err).to.be.null()
+            expect(err).to.be.null();
             expect(obj).to.be.a.string();
         });
         return done();
