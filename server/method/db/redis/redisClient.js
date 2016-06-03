@@ -18,7 +18,7 @@ redisClient.on('error', (err) => { });
 const createUserSession = function (device, version, userEmail, cb) {
     const entityId = Utils.hmacMd5Encrypt(JSON.stringify(userEmail));
     const dateNow = Date.now();
-    let sessionData = {
+    const sessionData = {
         entityId: entityId,
         email: userEmail,
         device: device,
@@ -36,7 +36,8 @@ const createUserSession = function (device, version, userEmail, cb) {
     });
     redisClient.set('session:email:' + entityId, sessionToken);
 
-    const expiryDuration = parseInt((Number(new Date)) / 1000) + 1800;// 30minutes ahead of current time
+    // Expiry duration is 30 minutes ahead of current time
+    const expiryDuration = parseInt((Number(new Date)) / 1000) + 1800;
     redisClient.expireat('session:' + sessionToken, expiryDuration);
     redisClient.expireat('session:email:' + entityId, expiryDuration);
 
@@ -47,21 +48,22 @@ const createUserSession = function (device, version, userEmail, cb) {
  * Get user session stored in database. Return null/empty if no session found.
  * @param token The session token value.
  * @param userEmail The User's email that will be used for searching if there's an existing session token.
- * @returns The session token String.
  */
 const getUserSession = function (token, userEmail, cb) {
-    let sessionToken = token;
+    const sessionToken = token;
     if (!Lodash.isEmpty(sessionToken)) {
         redisClient.hgetall('session:' + sessionToken, (err, obj) => {
             cb(err, obj);
         });
-    } else if (!Lodash.isEmpty(userEmail)) {
+    }
+    else if (!Lodash.isEmpty(userEmail)) {
         const entityId = Utils.hmacMd5Encrypt(JSON.stringify(userEmail));
         redisClient.get('session:email:' + entityId, (err, obj) => {
             cb(err, obj);
         });
-    } else {
-        let err = {
+    }
+    else {
+        const err = {
             message: 'No passed arguments token or email'
         };
         cb(err, null);
@@ -71,12 +73,18 @@ const getUserSession = function (token, userEmail, cb) {
 // Reset user session expiry to 30 minutes
 const refreshSessionExpiry = function (sessionToken, cb) {
     redisClient.hgetall('session:' + sessionToken, (err, obj) => {
-        const entityId = obj.entityId;
-        const expiryDuration = parseInt((Number(new Date)) / 1000) + 1800;// 30minutes ahead of current time
-        redisClient.expireat('session:' + sessionToken, expiryDuration);
-        redisClient.expireat('session:email:' + entityId, expiryDuration);
+
+        if (err) {
+            cb(err, null);
+        }
+        else {
+            const entityId = obj.entityId;
+            const expiryDuration = parseInt((Number(new Date)) / 1000) + 1800;
+            redisClient.expireat('session:' + sessionToken, expiryDuration);
+            redisClient.expireat('session:email:' + entityId, expiryDuration);
+            cb(null, sessionToken);
+        }
     });
-    cb(null, '');
 };
 
 /**
@@ -95,8 +103,8 @@ const getUserDetails = function (userEmail, cb) {
  * @param user The User object containing the details.
  */
 const writeUserDetails = function (user, cb) {
-    let salt = Bcryptjs.genSaltSync(10);
-    let hashPwd = Bcryptjs.hashSync(user.password, salt);
+    const salt = Bcryptjs.genSaltSync(10);
+    const hashPwd = Bcryptjs.hashSync(user.password, salt);
     const entityId = Utils.hmacMd5Encrypt(user.userEmail);
     redisClient.HMSET('user:' + user.email, {
         entityId: entityId,
@@ -105,7 +113,7 @@ const writeUserDetails = function (user, cb) {
         birthday: user.birthday,
         gender: user.gender,
         password: hashPwd
-    });//
+    });
     cb(null, user);
 };
 
@@ -127,8 +135,8 @@ const updateUserDetails = function (user, cb) {
  * @param newPassword The new password to be set.
  */
 const updateUserPassword = function (userEmail, newPassword, cb) {
-    let salt = Bcryptjs.genSaltSync(10);
-    let hashPwd = Bcryptjs.hashSync(newPassword, salt);
+    const salt = Bcryptjs.genSaltSync(10);
+    const hashPwd = Bcryptjs.hashSync(newPassword, salt);
     redisClient.HMSET('user:' + userEmail, {
         password: hashPwd
     });

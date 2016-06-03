@@ -13,31 +13,33 @@ module.exports = () => {
 
             if (err) {
 
-                let response = apiResponse.constructApiErrorResponse(400, err.errorCode, err.errorMessage);
+                const response = apiResponse.constructApiErrorResponse(400, err.errorCode, err.errorMessage);
                 server.log('error', '/user/register ' + response);
                 reply(response);
 
-            } else {
-                let user = request.payload;
+            }
+            else {
+                const user = request.payload;
 
                 // Validate user details password for registration
-                let checkPassword = () => {
+                const checkPassword = () => {
 
-                    let userDetails = JSON.parse(user);
-                    userValidator.validatePassword(userDetails.password, (err) => {
+                    userValidator.validatePassword(user.password, (err) => {
 
                         if (err) {
-                            let responseError = apiResponse.constructApiErrorResponse(400, err.errorCode, err.errorMessage);
+                            const responseError = apiResponse.constructApiErrorResponse(400, err.errorCode, err.errorMessage);
                             server.log('error', '/user/register ' + responseError);
                             reply(responseError);
-                        } else {
-                            server.methods.dbQuery.writeUserDetails(userDetails, (err, obj) => {
+                        }
+                        else {
+                            server.methods.dbQuery.writeUserDetails(user, (err, obj) => {
                                 if (err) {
                                     const response = apiResponse.getUnexpectedApiError();
                                     server.log('error', '/user/register ' + response);
                                     reply(response);
-                                } else {
-                                    reply(apiResponse.constructApiResponse(201, 201, userDetails.name + ' registered'));
+                                }
+                                else {
+                                    reply(apiResponse.constructApiResponse(201, 201, user.name + ' registered'));
                                 }
                             });
                         }
@@ -45,34 +47,33 @@ module.exports = () => {
                 };
 
                 // Check if email is already registered
-                let checkIfEmailExists = (email) => {
-
+                const checkIfEmailExists = (email) => {
                     server.methods.dbQuery.getUserDetails(email, (err, obj) => {
                         if (err) {
                             const response = apiResponse.getUnexpectedApiError();
                             server.log('error', '/user/register ' + response);
                             reply(response);
-                        } else if (obj) {
+                        }
+                        else if (obj) {
                             const response = apiResponse.getEmailAlreadyExistError();
                             server.log('error', '/user/register ' + response);
                             reply(response);
-                        } else {
+                        }
+                        else {
                             checkPassword();
                         }
                     });
                 };
-                
-                console.log('handlerRegister', user);
-                
+
                 // Validate user details for registration
                 userValidator.validateUserDetails(user, (err) => {
                     if (err) {
-                        let response = apiResponse.constructApiErrorResponse(400, err.errorCode, err.errorMessage);
+                        const response = apiResponse.constructApiErrorResponse(400, err.errorCode, err.errorMessage);
                         server.log('error', '/user/register ' + response);
                         reply(response);
-                    } else {
-                        let userDetails = JSON.parse(user);
-                        checkIfEmailExists(userDetails.email);
+                    }
+                    else {
+                        checkIfEmailExists(user.email);
                     }
                 });
             }

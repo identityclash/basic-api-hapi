@@ -13,29 +13,27 @@ const scheme = function (server, options) {
 
             if (!sessionToken) {
                 return reply(apiResponse.constructApiErrorResponse(401, 401, 'Unauthorized'));
-            } else {
-                authValidator.validateSession(server, req.headers, (err) => {
+            }
+
+            authValidator.validateSession(server, req.headers, (err) => {
+
+                if (err) {
+                    return reply(apiResponse.constructApiErrorResponse(401, 401, 'Unauthorized'));
+                }
+
+                server.methods.dbQuery.refreshSessionExpiry(sessionToken, (err, obj) => {
+
                     if (err) {
                         return reply(apiResponse.constructApiErrorResponse(401, 401, 'Unauthorized'));
-                    } else {
-                        server.methods.dbQuery.refreshSessionExpiry(sessionToken, (err, obj) => {
-
-                            if (err) {
-                                return reply(apiResponse.constructApiErrorResponse(401, 401, 'Unauthorized'));
-                            } else {
-
-                                // Required to return object 'result' with 'credentials' property
-
-                                let result = {
-                                    credentials: sessionToken
-                                };
-                                return reply.continue(result);
-                            }
-                        });
-
                     }
+
+                    // Required to return object 'result' with 'credentials' property
+                    const result = {
+                        credentials: sessionToken
+                    };
+                    return reply.continue(result);
                 });
-            }
+            });
         }
     };
 };
