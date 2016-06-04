@@ -5,7 +5,6 @@ const Lab = require('lab');
 const Sinon = require('sinon');
 const Async = require('async');
 const Composer = require('../../server/composer');
-const DbQuery = require('../../server/method/db/dbQuery');
 
 const expect = Code.expect;
 const lab = exports.lab = Lab.script();
@@ -16,7 +15,8 @@ const it = lab.it;
 
 describe('REST API', () => {
 
-
+    let mockServer;
+    
     const userDummy = {
         email: 'juancruz@gmail.com',
         name: 'Juan Cruz',
@@ -27,6 +27,7 @@ describe('REST API', () => {
 
     const headerDevice = 'Android';
     const headerVersion = '1.0.0';
+    const headerSessionToken = 'dummySessionToken';
 
     function createApiServer(cb) {
         Composer((err, server) => {
@@ -47,31 +48,70 @@ describe('REST API', () => {
         });
     }
 
-    describe('User Registration', () => {
+    before({ timeout: 8000 }, (done) => {
 
-        let mockServer;
+        createApiServer((server) => {
 
-        before({ timeout: 8000 }, (done) => {
+            mockServer = server;
+            done();
+        });
+    });
 
-            Sinon.stub(DbQuery, 'writeUserDetails', (userDetails, cb) => {
+    after((done) => {
+
+        mockServer.stop((err) => {
+
+            if (err) {
+                console.log('Error stopping server instance!');
+            }
+        });
+
+        done();
+    });
+
+    describe('User registration', () => {
+
+        before((done) => {
+
+            Sinon.stub(mockServer.methods.dbQuery, 'writeUserDetails', (userDetails, cb) => {
+
                 cb(null, userDetails);
             });
 
-            Sinon.stub(DbQuery, 'getUserDetails', (userDetails, cb) => {
+            Sinon.stub(mockServer.methods.dbQuery, 'getUserDetails', (userDetails, cb) => {
+
                 cb(null, null);
             });
 
-            createApiServer((server) => {
-                mockServer = server;
-                done();
-            });
+            done();
         });
 
         after((done) => {
 
-            DbQuery.getUserDetails.restore();
-            DbQuery.writeUserDetails.restore();
+            mockServer.methods.dbQuery.getUserDetails.restore();
+            mockServer.methods.dbQuery.writeUserDetails.restore();
             done();
+        });
+
+        it('user registration with valid details and headers', { timeout: 1000 }, (done) => {
+
+            const options = {
+                method: 'POST',
+                url: '/user/register',
+                headers: {
+                    device: headerDevice,
+                    version: headerVersion
+                },
+                payload: userDummy
+            };
+
+            mockServer.inject(options, (response) => {
+                expect(response.result).to.be.an.object();
+                expect(response.statusCode).to.equal(200);
+                expect(response.result.statusCode).to.equal(201);
+                expect(response.headers['content-type']).to.include('application/json');
+                done();
+            });
         });
 
         it('user registration with invalid headers', { timeout: 1000 }, (done) => {
@@ -236,7 +276,74 @@ describe('REST API', () => {
             });
         });
 
-        it('user registration with valid details and headers', { timeout: 1000 }, (done) => {
+        it('user registration with error in database query getUserDetails', { timeout: 1000 }, (done) => {
+
+            const options = {
+                method: 'POST',
+                url: '/user/register',
+                headers: {
+                    device: headerDevice,
+                    version: headerVersion
+                },
+                payload: userDummy
+            };
+
+            mockServer.methods.dbQuery.getUserDetails.restore();
+
+            Sinon.stub(mockServer.methods.dbQuery, 'getUserDetails', (userDetails, cb) => {
+                cb({ error: 'dummy error message' }, null);
+            });
+
+            mockServer.inject(options, (response) => {
+                expect(response.result).to.be.an.object();
+                expect(response.statusCode).to.equal(400);
+                expect(response.result.statusCode).to.equal(400);
+                expect(response.result.message).to.include('Unexpected API error.');
+                expect(response.headers['content-type']).to.include('application/json');
+                done();
+            });
+        });
+
+        it('user registration with error in database query writeUserDetails', { timeout: 1000 }, (done) => {
+
+            const options = {
+                method: 'POST',
+                url: '/user/register',
+                headers: {
+                    device: headerDevice,
+                    version: headerVersion
+                },
+                payload: userDummy
+            };
+
+            mockServer.methods.dbQuery.getUserDetails.restore();
+            mockServer.methods.dbQuery.writeUserDetails.restore();
+
+            Sinon.stub(mockServer.methods.dbQuery, 'getUserDetails', (userDetails, cb) => {
+                cb(null, null);
+            });
+
+            Sinon.stub(mockServer.methods.dbQuery, 'writeUserDetails', (userDetails, cb) => {
+                cb({ error: 'test error'}, null);
+            });
+
+            mockServer.inject(options, (response) => {
+                expect(response.result).to.be.an.object();
+                expect(response.statusCode).to.equal(400);
+                expect(response.result.statusCode).to.equal(400);
+                expect(response.result.message).to.include('Unexpected API error.');
+                expect(response.headers['content-type']).to.include('application/json');
+                done();
+            });
+        });
+
+        it('user registration with email existing', { timeout: 1000 }, (done) => {
+
+            mockServer.methods.dbQuery.getUserDetails.restore();
+
+            Sinon.stub(mockServer.methods.dbQuery, 'getUserDetails', (userDetails, cb) => {
+                cb(null, userDummy);
+            });
 
             const options = {
                 method: 'POST',
@@ -250,12 +357,66 @@ describe('REST API', () => {
 
             mockServer.inject(options, (response) => {
                 expect(response.result).to.be.an.object();
-                expect(response.statusCode).to.equal(200);
-                expect(response.result.statusCode).to.equal(201);
+                expect(response.statusCode).to.equal(400);
+                expect(response.result.statusCode).to.equal(400);
+                expect(response.result.message).to.include('Email already taken');
                 expect(response.headers['content-type']).to.include('application/json');
                 done();
             });
         });
     });
 
+    describe('User get details', () => {
+
+        before((done) => {
+            Sinon.stub(mockServer.methods.dbQuery, 'getUserSession', (token, userEmail, cb) => {
+
+                cb(null, headerSessionToken);
+            });
+
+            Sinon.stub(mockServer.methods.dbQuery, 'refreshSessionExpiry', (sessionToken, cb) => {
+
+                cb(null, headerSessionToken);
+            });
+
+            Sinon.stub(mockServer.methods.dbQuery, 'getUserDetails', (userEmail, cb) => {
+
+                cb(null, userDummy);
+            });
+
+            done();
+        });
+
+        after((done) => {
+
+            mockServer.methods.dbQuery.getUserSession.restore();
+            mockServer.methods.dbQuery.refreshSessionExpiry.restore();
+            mockServer.methods.dbQuery.getUserDetails.restore();
+            done();
+        });
+
+        it('user get details with valid details and headers', { timeout: 1000 }, (done) => {
+
+            const options = {
+                method: 'GET',
+                url: '/user/{email}',
+                params: {
+                    email: userDummy.email
+                },
+                headers: {
+                    device: headerDevice,
+                    version: headerVersion,
+                    token: headerSessionToken
+                }
+            };
+
+            mockServer.inject(options, (response) => {
+                expect(response.result).to.be.an.object();
+                expect(response.result.email).to.equal(userDummy.email);
+                expect(response.statusCode).to.equal(200);
+                expect(response.headers['content-type']).to.include('application/json');
+                done();
+            });
+        });
+    });
 });
