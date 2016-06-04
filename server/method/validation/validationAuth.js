@@ -32,16 +32,12 @@ const validateSession = function (server, headers, cb) {
                 cb(apiError);
             }
             else {
-
-                const token = headers.token;
-
-                server.methods.dbQuery.getUserSession(token, null, (err, obj) => {
+                server.methods.dbQuery.getUserSession(headerSession, null, (err, obj) => {
+                    
                     if (Lodash.isEmpty(err) && !Lodash.isEmpty(obj)) {
-
                         // Refresh session expiry if valid and existing
-
-                        if (Lodash.isEqual(headerSession, token)) {
-                            server.methods.dbQuery.refreshSessionExpiry(token, (err, obj) => {
+                        if (Lodash.isEqual(obj, headerSession)) {
+                            server.methods.dbQuery.refreshSessionExpiry(headerSession, (err, obj) => {
                                 cb(err);
                             });
                         }
