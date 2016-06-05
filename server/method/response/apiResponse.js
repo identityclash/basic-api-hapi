@@ -35,7 +35,7 @@ const constructApiErrorResponse = function (httpStatus, apiStatusCode, msg) {
  */
 const getUnexpectedApiError = function () {
     const msg = 'Unexpected API error.';
-    const error = Boom.badImplementation(msg);
+    const error = Boom.badRequest(msg);
     error.output.payload.message = msg;
     return error;
 };
