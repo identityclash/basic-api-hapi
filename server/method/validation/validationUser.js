@@ -74,36 +74,34 @@ const validateUserDetails = function (userDetails, cb) {
     };
     if (!userDetails) {
         // User details empty
-        cb(error, userDetails, 0);
+        return cb(error, userDetails, 0);
     }
     else if (!isNameValid(userDetails.name)) {
         // User name not specified or invalid
         error.errorCode = 423;
         error.errorMessage = 'Invalid name';
-        cb(error, userDetails, 0);
+        return cb(error, userDetails, 0);
     }
     else if (!isEmailvalid(userDetails.email)) {
         // User email not specified or invalid
         error.errorCode = 424;
         error.errorMessage = 'Invalid email';
-        cb(error, userDetails, 0);
+        return cb(error, userDetails, 0);
     }
     else if (!isBirthdateValid(userDetails.birthday)) {
         // User birthday invalid, must be at least 18yrs old and max 50 yrs old
         error.errorCode = 425;
         error.errorMessage = 'Invalid birthday, must be at least 18yrs old and not older than 50yrs old.';
-        cb(error, userDetails, 0);
+        return cb(error, userDetails, 0);
     }
     else if (!isGenderValid(userDetails.gender)) {
         // User birthday invalid, must be at least 18yrs old and max 50 yrs old
         error.errorCode = 426;
         error.errorMessage = 'Invalid gender. Must be \'M\' or \'F\' values only';
-        cb(error, userDetails, 0);
+        return cb(error, userDetails, 0);
     }
-    else {
-        // Success, return user details that was saved
-        cb(null, userDetails, 0);
-    }
+    // Success, return user details that was saved
+    return cb(null, userDetails, 0);
 };
 
 /**
@@ -116,14 +114,14 @@ const validatePassword = function (payload, cb) {
         errorCode: 428,
         errorMessage: 'User password invalid. Must be letters or numbers. Minimum of 8 characters.'
     };
+
     if (!payload || !isPasswordValid(payload)) {
         // User password invalid, must be alphanumeric characters only
-        cb(error, payload, 0);
+        return cb(error, payload, 0);
     }
-    else {
-        // Success, return user details that was saved
-        cb(null, payload, 0);
-    }
+
+    // Success, return user details that was saved
+    return cb(null, payload, 0);
 };
 
 module.exports = {

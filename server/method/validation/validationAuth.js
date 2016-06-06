@@ -15,12 +15,9 @@ const validateSession = function (server, headers, cb) {
     headerValidator.validateHeaders(headers, (err) => {
 
         if (err) {
-
-            cb(err);
-
+            return cb(err);
         }
         else {
-
             const apiError = {
                 errorCode: 401,
                 errorMessage: 'Unauthorized access.'
@@ -29,7 +26,7 @@ const validateSession = function (server, headers, cb) {
             const headerSession = headers.token;
 
             if (Lodash.isEmpty(headerSession)) {
-                cb(apiError);
+                return cb(apiError);
             }
             else {
                 server.methods.dbQuery.getUserSession(headerSession, null, (err, obj) => {
@@ -74,13 +71,12 @@ const validateAuth = function (server, headers, payload, cb) {
     headerValidator.validateHeaders(headers, (err) => {
 
         if (err) {
-            cb(err, payload);
+            return cb(err, payload);
         }
         else if (!payload) {
-            cb(apiError, payload);
+            return cb(apiError, payload);
         }
         else {
-
             const device = headers.device;
             const version = headers.version;
 
@@ -88,20 +84,20 @@ const validateAuth = function (server, headers, payload, cb) {
                 server.methods.dbQuery.getUserSession(null, credentials.email, (err, obj) => {
 
                     if (err) {
-                        cb(apiError, payload);
+                        return cb(apiError, payload);
                     }
                     else if (!Lodash.isEmpty(obj)) {
                         const session = obj.toString();
                         // Refresh session expiry if existing
                         server.methods.dbQuery.refreshSessionExpiry(session, (err, obj) => {
-                            cb(err, session);
+                            return cb(err, session);
                         });
                     }
                     else {
                         // Create session if no existing
                         server.methods.dbQuery.createUserSession(device, version, credentials.email, (err, obj) => {
 
-                            cb(err, obj);
+                            return cb(err, obj);
                         });
                     }
                 });
@@ -110,14 +106,15 @@ const validateAuth = function (server, headers, payload, cb) {
             server.methods.dbQuery.getUserDetails(credentials.email, (err, obj) => {
 
                 if (Lodash.isEmpty(obj) || !Lodash.isEmpty(err)) {
-                    cb(apiError, payload);
+                    return cb(apiError, payload);
                 }
                 else {
                     const hashPwd = obj.password;
                     Bcryptjs.compare(credentials.password, hashPwd, (err, res) => {
+
                         if (err || res === false) {
                             // Password did not matched, throw err
-                            cb(apiError, payload);
+                            return cb(apiError, payload);
                         }
                         else {
                             // Password matched

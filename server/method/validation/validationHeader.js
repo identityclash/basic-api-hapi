@@ -8,14 +8,13 @@ const validateHeaders = function (headers, cb) {
         errorMessage: 'Invalid headers. Required device and version.'
     };
     if (!headers || Lodash.isEmpty(headers)) {
-        cb(apiError);
+        return cb(apiError);
     }
     else if (Lodash.isEmpty(headers.device) || Lodash.isEmpty(headers.version)) {
-        cb(apiError);
+        return cb(apiError);
     }
-    else {
-        cb(null);
-    }
+
+    return cb(null);
 };
 
 module.exports = {
