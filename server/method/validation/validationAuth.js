@@ -33,17 +33,12 @@ const validateSession = function (server, headers, cb) {
             }
             else {
                 server.methods.dbQuery.getUserSession(headerSession, null, (err, obj) => {
-                    
+
                     if (Lodash.isEmpty(err) && !Lodash.isEmpty(obj)) {
-                        // Refresh session expiry if valid and existing
-                        if (Lodash.isEqual(obj, headerSession)) {
-                            server.methods.dbQuery.refreshSessionExpiry(headerSession, (err, obj) => {
-                                cb(err);
-                            });
-                        }
-                        else {
-                            cb(apiError);
-                        }
+                        server.methods.dbQuery.refreshSessionExpiry(headerSession, (err, obj) => {
+
+                            cb(err);
+                        });
                     }
                     else {
                         cb(apiError);
@@ -88,10 +83,9 @@ const validateAuth = function (server, headers, payload, cb) {
 
             const device = headers.device;
             const version = headers.version;
-            const token = headers.token;
 
             const passwordChecked = function () {
-                server.methods.dbQuery.getUserSession(token, credentials.email, (err, obj) => {
+                server.methods.dbQuery.getUserSession(null, credentials.email, (err, obj) => {
 
                     if (err) {
                         cb(apiError, payload);

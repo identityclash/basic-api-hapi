@@ -53,12 +53,14 @@ const getUserSession = function (token, userEmail, cb) {
     const sessionToken = token;
     if (!Lodash.isEmpty(sessionToken)) {
         redisClient.hgetall('session:' + sessionToken, (err, obj) => {
+            // obj Returns the sessionData object when the sessionToken was created
             cb(err, obj);
         });
     }
     else if (!Lodash.isEmpty(userEmail)) {
         const entityId = Utils.hmacMd5Encrypt(JSON.stringify(userEmail));
         redisClient.get('session:email:' + entityId, (err, obj) => {
+            // obj Returns the session token string
             cb(err, obj);
         });
     }
