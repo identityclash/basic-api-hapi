@@ -41,7 +41,7 @@ const createUserSession = function (device, version, userEmail, cb) {
     redisClient.expireat('session:' + sessionToken, expiryDuration);
     redisClient.expireat('session:email:' + entityId, expiryDuration);
 
-    cb(null, sessionToken);
+    return cb(null, sessionToken);
 };
 
 /**
@@ -53,20 +53,21 @@ const getUserSession = function (token, userEmail, cb) {
     const sessionToken = token;
     if (!Lodash.isEmpty(sessionToken)) {
         redisClient.hgetall('session:' + sessionToken, (err, obj) => {
-            cb(err, obj);
+            // obj Returns the sessionData object when the sessionToken was created
+            return cb(err, obj);
         });
     }
     else if (!Lodash.isEmpty(userEmail)) {
         const entityId = Utils.hmacMd5Encrypt(JSON.stringify(userEmail));
         redisClient.get('session:email:' + entityId, (err, obj) => {
-            cb(err, obj);
+            // obj Returns the session token string
+            return cb(err, obj);
         });
-    }
-    else {
+    } else {
         const err = {
             message: 'No passed arguments token or email'
         };
-        cb(err, null);
+        return cb(err, null);
     }
 };
 
@@ -75,14 +76,14 @@ const refreshSessionExpiry = function (sessionToken, cb) {
     redisClient.hgetall('session:' + sessionToken, (err, obj) => {
 
         if (err) {
-            cb(err, null);
+            return cb(err, null);
         }
         else {
             const entityId = obj.entityId;
             const expiryDuration = parseInt((Number(new Date)) / 1000) + 1800;
             redisClient.expireat('session:' + sessionToken, expiryDuration);
             redisClient.expireat('session:email:' + entityId, expiryDuration);
-            cb(null, sessionToken);
+            return cb(null, sessionToken);
         }
     });
 };
@@ -94,7 +95,7 @@ const refreshSessionExpiry = function (sessionToken, cb) {
  */
 const getUserDetails = function (userEmail, cb) {
     redisClient.hgetall('user:' + userEmail, (err, obj) => {
-        cb(err, obj);
+        return cb(err, obj);
     });
 };
 
@@ -114,7 +115,7 @@ const writeUserDetails = function (user, cb) {
         gender: user.gender,
         password: hashPwd
     });
-    cb(null, user);
+    return cb(null, user);
 };
 
 /**
@@ -126,7 +127,7 @@ const updateUserDetails = function (user, cb) {
         name: user.name,
         birthday: user.birthday
     });
-    cb(null, user);
+    return cb(null, user);
 };
 
 /**
@@ -140,7 +141,7 @@ const updateUserPassword = function (userEmail, newPassword, cb) {
     redisClient.HMSET('user:' + userEmail, {
         password: hashPwd
     });
-    cb(null, userEmail);
+    return cb(null, userEmail);
 };
 
 module.exports = {
