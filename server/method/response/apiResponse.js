@@ -24,6 +24,8 @@ const constructApiResponse = function (httpStatus, apiStatusCode, msg) {
  */
 const constructApiErrorResponse = function (httpStatus, apiStatusCode, msg) {
     const error = Boom.create(httpStatus, msg, { timestamp: Date.now() });
+    error.errorCode = apiStatusCode;
+    error.errorMessage = msg;
     error.output.payload.statusCode = apiStatusCode;
     error.output.payload.message = msg;
     return error;

@@ -38,28 +38,25 @@ function isBirthdateValid(birthday) {
 
         const bdayStr = String(birthday);
 
-        let isValid = false;
-        if (!Validator.isBefore(bdayStr, minBday.toString())
-            && !Validator.isAfter(bdayStr, maxBday.toString())) {
-            isValid = true;
+        if (Validator.isBefore(bdayStr, minBday.toString())
+            || Validator.isAfter(bdayStr, maxBday.toString())) {
+            return false;
         }
-        return isValid;
+        return true;
     }
     return false;
 }
 
 function isGenderValid(gender) {
-    if (!Lodash.isEmpty(gender) && (Validator.equals(gender, 'M') || Validator.equals(gender, 'F'))) {
+    if (Lodash.isEqual(gender, 'M') || Lodash.isEqual(gender, 'F')) {
         return true;
     }
     return false;
 }
 
 function isPasswordValid(password) {
-    if (!Lodash.isEmpty(password) && Validator.isAlphanumeric(password, 'en-US') && password.length >= 8) {
-        return true;
-    }
-    return false;
+    const isPasswordValid = Validator.isAlphanumeric(password, 'en-US');
+    return isPasswordValid;
 }
 
 /**
@@ -72,7 +69,7 @@ const validateUserDetails = function (userDetails, cb) {
         errorCode: 422,
         errorMessage: 'User details invalid. Must not be empty.'
     };
-    if (!userDetails) {
+    if (Lodash.isEmpty(userDetails)) {
         // User details empty
         return cb(error, userDetails, 0);
     }
@@ -106,22 +103,22 @@ const validateUserDetails = function (userDetails, cb) {
 
 /**
  * Check if user password is valid.
- * @param payload The password string.
+ * @param password The password string.
  * @param cb The callback function when User object password has been checked.
  */
-const validatePassword = function (payload, cb) {
+const validatePassword = function (password, cb) {
     const error = {
         errorCode: 428,
         errorMessage: 'User password invalid. Must be letters or numbers. Minimum of 8 characters.'
     };
 
-    if (!payload || !isPasswordValid(payload)) {
+    if (!password || !isPasswordValid(password)) {
         // User password invalid, must be alphanumeric characters only
-        return cb(error, payload, 0);
+        return cb(error, password, 0);
     }
 
     // Success, return user details that was saved
-    return cb(null, payload, 0);
+    return cb(null, password, 0);
 };
 
 module.exports = {

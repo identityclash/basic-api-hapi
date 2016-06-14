@@ -7,10 +7,7 @@ const validateHeaders = function (headers, cb) {
         errorCode: 400,
         errorMessage: 'Invalid headers. Required device and version.'
     };
-    if (!headers || Lodash.isEmpty(headers)) {
-        return cb(apiError);
-    }
-    else if (Lodash.isEmpty(headers.device) || Lodash.isEmpty(headers.version)) {
+    if (Lodash.isEmpty(headers.device) || Lodash.isEmpty(headers.version)) {
         return cb(apiError);
     }
 
