@@ -55,7 +55,26 @@ function isGenderValid(gender) {
 }
 
 function isPasswordValid(password) {
-    const isPasswordValid = Validator.isAlphanumeric(password, 'en-US');
+    const regEx = new RegExp('^[a-zA-Z0-9]*$');
+    const regExNum = new RegExp('^[0-9]*$');
+    const regExLetter = new RegExp('^[a-zA-Z]*$');
+    let isValid = true;
+    let hasLetter = false;
+    let hasNumber = false;
+    for (let i = 0; i < password.length && isValid; i++) {
+        const char = password.charAt(i);
+        isValid = regEx.test(char);
+        if (!hasLetter) {
+            hasLetter = regExLetter.test(char);
+        }
+        if (!hasNumber) {
+            hasNumber = regExNum.test(char);
+        }
+        if (!isValid) {
+            return false;
+        }
+    }
+    const isPasswordValid = (hasLetter && hasNumber);
     return isPasswordValid;
 }
 
@@ -71,34 +90,34 @@ const validateUserDetails = function (userDetails, cb) {
     };
     if (Lodash.isEmpty(userDetails)) {
         // User details empty
-        return cb(error, userDetails, 0);
+        return cb(error);
     }
     else if (!isNameValid(userDetails.name)) {
         // User name not specified or invalid
         error.errorCode = 423;
         error.errorMessage = 'Invalid name';
-        return cb(error, userDetails, 0);
+        return cb(error);
     }
     else if (!isEmailvalid(userDetails.email)) {
         // User email not specified or invalid
         error.errorCode = 424;
         error.errorMessage = 'Invalid email';
-        return cb(error, userDetails, 0);
+        return cb(error);
     }
     else if (!isBirthdateValid(userDetails.birthday)) {
         // User birthday invalid, must be at least 18yrs old and max 50 yrs old
         error.errorCode = 425;
         error.errorMessage = 'Invalid birthday, must be at least 18yrs old and not older than 50yrs old.';
-        return cb(error, userDetails, 0);
+        return cb(error);
     }
     else if (!isGenderValid(userDetails.gender)) {
         // User birthday invalid, must be at least 18yrs old and max 50 yrs old
         error.errorCode = 426;
         error.errorMessage = 'Invalid gender. Must be \'M\' or \'F\' values only';
-        return cb(error, userDetails, 0);
+        return cb(error);
     }
     // Success, return user details that was saved
-    return cb(null, userDetails, 0);
+    return cb(null);
 };
 
 /**
@@ -112,13 +131,13 @@ const validatePassword = function (password, cb) {
         errorMessage: 'User password invalid. Must be letters or numbers. Minimum of 8 characters.'
     };
 
-    if (!password || !isPasswordValid(password)) {
+    if (Lodash.isEmpty(password) || !isPasswordValid(password) || password.length < 8) {
         // User password invalid, must be alphanumeric characters only
-        return cb(error, password, 0);
+        return cb(error);
     }
 
     // Success, return user details that was saved
-    return cb(null, password, 0);
+    return cb(null);
 };
 
 module.exports = {

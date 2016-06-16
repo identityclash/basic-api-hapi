@@ -14,19 +14,20 @@ module.exports = () => {
         const passwordDetails = request.payload;
         const email = request.params.email;
 
-        // Check if new_password is valid
+        // Check if newPassword is valid
 
         const checkNewPassword = () => {
-            userValidator.validatePassword(passwordDetails.new_password, (err) => {
+
+            userValidator.validatePassword(passwordDetails.newPassword, (err) => {
 
                 if (err) {
                     const response = apiResponse.constructApiErrorResponse(400, err.errorCode, err.errorMessage);
                     server.log('error', '/user/' + email + '/password ' + response);
-                    reply(response).type('application/json');
+                    reply(response);
 
                 }
                 else {
-                    server.methods.dbQuery.updateUserPassword(email, passwordDetails.new_password, (err, obj) => {
+                    server.methods.dbQuery.updateUserPassword(email, passwordDetails.newPassword, (err, obj) => {
                         if (err) {
                             const response = apiResponse.getUnexpectedApiError();
                             server.log('error', '/user/' + email + '/password ' + response);
@@ -49,13 +50,14 @@ module.exports = () => {
                 reply(apiResponse.getUnexpectedApiError());
             }
             else if (Lodash.isEmpty(obj)) {
+                server.log('error', '/user/' + email + '/password');
                 reply(apiResponse.getUserNonExistentError());
             }
             else {
 
-                // Check if old_password matches the stored current user password in database
+                // Check if oldPassword matches the stored current user password in database
 
-                Bcryptjs.compare(passwordDetails.old_password, obj.password, (err, res) => {
+                Bcryptjs.compare(passwordDetails.oldPassword, obj.password, (err, res) => {
 
                     if (err || res === false) {
                         const response = apiResponse.constructApiErrorResponse(400, 400, 'Password invalid.');

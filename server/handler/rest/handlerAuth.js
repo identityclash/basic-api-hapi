@@ -20,7 +20,7 @@ module.exports = () => {
 
         const errLogin = apiResponse.constructApiErrorResponse(400, apiError.errorCode, apiError.errorMessage);
 
-        function evaluateResult (err, result) {
+        function evaluateResult(err, result) {
             if (!Lodash.isEmpty(err)) {
                 if (err.errorCode && err.errorMessage) {
                     const response = apiResponse.constructApiErrorResponse(400, err.errorCode, err.errorMessage);
@@ -31,16 +31,16 @@ module.exports = () => {
                 const response = apiResponse.getUnexpectedApiError();
                 server.log('error', '/auth/user ' + response);
                 return reply(response);
-            } else if (Lodash.isEmpty(result)) {
+            }
+            else if (Lodash.isEmpty(result)) {
                 server.log('error', '/auth/user ' + errLogin);
                 return reply(errLogin);
             }
-            else {
-                const sessionObj = {
-                    session: result.toString()
-                };
-                return reply(sessionObj);
-            }
+
+            const sessionObj = {
+                session: result.toString()
+            };
+            return reply(sessionObj);
         }
 
         server.methods.validationHeader.validateHeaders(request.headers, (err) => {
@@ -85,7 +85,6 @@ module.exports = () => {
                         evaluateResult(err, null);
                     }
                     else if (Lodash.isEmpty(obj)) {
-                        // no existing 
                         evaluateResult(errLogin, null);
                     }
                     else {

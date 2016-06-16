@@ -21,8 +21,9 @@ module.exports = () => {
             }
             else {
                 // Remove 'password' property in response
-                delete obj.password;
-                reply(obj);
+                const user = Lodash.clone(obj);
+                delete user.password;
+                reply(user);
             }
         });
     };
