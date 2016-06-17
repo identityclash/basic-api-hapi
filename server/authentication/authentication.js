@@ -11,28 +11,17 @@ const scheme = function (server, options) {
             const req = request.raw.req;
             const sessionToken = req.headers.token;
 
-            if (!sessionToken) {
-                return reply(apiResponse.constructApiErrorResponse(401, 401, 'Unauthorized'));
-            }
-
             authValidator.validateSession(server, req.headers, (err) => {
 
                 if (err) {
                     return reply(apiResponse.constructApiErrorResponse(401, 401, 'Unauthorized'));
                 }
 
-                server.methods.dbQuery.refreshSessionExpiry(sessionToken, (err, obj) => {
-
-                    if (err) {
-                        return reply(apiResponse.constructApiErrorResponse(401, 401, 'Unauthorized'));
-                    }
-
-                    // Required to return object 'result' with 'credentials' property
-                    const result = {
-                        credentials: sessionToken
-                    };
-                    return reply.continue(result);
-                });
+                // Required to return object 'result' with 'credentials' property
+                const result = {
+                    credentials: sessionToken
+                };
+                return reply.continue(result);
             });
         }
     };

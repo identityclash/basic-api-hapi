@@ -836,6 +836,50 @@ describe('REST API', () => {
             });
         });
 
+        it('user get details with other headers empty', { timeout: 1000 }, (done) => {
+
+            const options = {
+                method: 'GET',
+                url: '/user/{email}',
+                params: {
+                    email: userDummy.email
+                },
+                headers: {
+                    token: headerSessionToken
+                }
+            };
+
+            mockServer.inject(options, (response) => {
+                expect(response.result).to.be.an.object();
+                expect(response.statusCode).to.equal(401);
+                expect(response.headers['content-type']).to.include('application/json');
+                done();
+            });
+        });
+
+        it('user get details with session token empty', { timeout: 1000 }, (done) => {
+
+            const options = {
+                method: 'GET',
+                url: '/user/{email}',
+                params: {
+                    email: userDummy.email
+                },
+                headers: {
+                    device: headerDevice,
+                    version: headerVersion,
+                    token: ''
+                }
+            };
+
+            mockServer.inject(options, (response) => {
+                expect(response.result).to.be.an.object();
+                expect(response.statusCode).to.equal(401);
+                expect(response.headers['content-type']).to.include('application/json');
+                done();
+            });
+        });
+
         it('user get details with error in database query get user details ', { timeout: 1000 }, (done) => {
 
             const options = {
@@ -893,6 +937,82 @@ describe('REST API', () => {
                 expect(response.statusCode).to.equal(404);
                 expect(response.result.statusCode).to.equal(404);
                 expect(response.result.message).to.include('User non-existent');
+                expect(response.headers['content-type']).to.include('application/json');
+                done();
+            });
+        });
+
+        it('user get details with empty return of database query get user session', { timeout: 1000 }, (done) => {
+
+            const options = {
+                method: 'GET',
+                url: '/user/{email}',
+                params: {
+                    email: userDummy.email
+                },
+                headers: {
+                    device: headerDevice,
+                    version: headerVersion,
+                    token: headerSessionToken
+                }
+            };
+
+            mockServer.methods.dbQuery.getUserSession.restore();
+            Sinon.stub(mockServer.methods.dbQuery, 'getUserSession', (token, userEmail, cb) => {
+
+                cb(null, null);
+            });
+
+            mockServer.methods.dbQuery.getUserDetails.restore();
+            Sinon.stub(mockServer.methods.dbQuery, 'getUserDetails', (userEmail, cb) => {
+
+                cb(null, userDummy);
+            });
+
+            mockServer.inject(options, (response) => {
+                expect(response.result).to.be.an.object();
+                expect(response.statusCode).to.equal(401);
+                expect(response.headers['content-type']).to.include('application/json');
+                done();
+            });
+        });
+
+        it('user get details with error in database query refresh session expiry', { timeout: 1000 }, (done) => {
+
+            const options = {
+                method: 'GET',
+                url: '/user/{email}',
+                params: {
+                    email: userDummy.email
+                },
+                headers: {
+                    device: headerDevice,
+                    version: headerVersion,
+                    token: headerSessionToken
+                }
+            };
+
+            mockServer.methods.dbQuery.getUserSession.restore();
+            Sinon.stub(mockServer.methods.dbQuery, 'getUserSession', (token, userEmail, cb) => {
+
+                cb(null, headerSessionToken);
+            });
+
+            mockServer.methods.dbQuery.getUserDetails.restore();
+            Sinon.stub(mockServer.methods.dbQuery, 'getUserDetails', (userEmail, cb) => {
+
+                cb(null, userDummy);
+            });
+
+            mockServer.methods.dbQuery.refreshSessionExpiry.restore();
+            Sinon.stub(mockServer.methods.dbQuery, 'refreshSessionExpiry', (sessionToken, cb) => {
+
+                cb({ error: 'dummy error message' }, null);
+            });
+
+            mockServer.inject(options, (response) => {
+                expect(response.result).to.be.an.object();
+                expect(response.statusCode).to.equal(401);
                 expect(response.headers['content-type']).to.include('application/json');
                 done();
             });

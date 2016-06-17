@@ -30,7 +30,7 @@ const validateSession = function (server, headers, cb) {
             else {
                 server.methods.dbQuery.getUserSession(headerSession, null, (err, obj) => {
 
-                    if (Lodash.isEmpty(err) && !Lodash.isEmpty(obj)) {
+                    if (!Lodash.isEmpty(obj)) {
                         server.methods.dbQuery.refreshSessionExpiry(headerSession, (err, obj) => {
 
                             cb(err);
