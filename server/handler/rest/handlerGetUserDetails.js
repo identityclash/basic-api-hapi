@@ -9,11 +9,14 @@ module.exports = () => {
         const server = request.server;
         const apiResponse = server.methods.apiResponse;
 
-        const userEmail = encodeURIComponent(request.params.email);
-        server.methods.dbQuery.getUserDetails(decodeURIComponent(userEmail), (err, obj) => {
+        // request.auth is the server.auth strategy
+        const sessionDetails = request.auth.credentials;
+
+        const email = sessionDetails.email;
+        server.methods.dbQuery.getUserDetails(decodeURIComponent(email), (err, obj) => {
 
             if (err) {
-                server.log('error', '/user/' + request.params.email + ' ' + err);
+                server.log('error', '/user ' + email + ' ' + err);
                 reply(apiResponse.getUnexpectedApiError());
             }
             else if (Lodash.isEmpty(obj)) {

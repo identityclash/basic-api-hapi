@@ -30,7 +30,14 @@ describe('REST API', () => {
 
     const headerDevice = 'Android';
     const headerVersion = '1.0.0';
-    const headerSessionToken = 'dummySessionToken';
+    const headerSessionToken = '2bb6512aa13f7f903080bba45a56dcfb';
+
+    const headerSessionDetails = {
+        entityId: 'fbfda32864ff92afc73219c5a7d34c01',
+        email: 'juancruz@gmail.com',
+        device: 'Android',
+        version: '1.0.0'
+    };
 
     function createApiServer(cb) {
         Composer((err, server) => {
@@ -770,12 +777,12 @@ describe('REST API', () => {
         before((done) => {
             Sinon.stub(mockServer.methods.dbQuery, 'getUserSession', (token, userEmail, cb) => {
 
-                cb(null, headerSessionToken);
+                cb(null, headerSessionDetails);
             });
 
             Sinon.stub(mockServer.methods.dbQuery, 'refreshSessionExpiry', (sessionToken, cb) => {
 
-                cb(null, headerSessionToken);
+                cb(null, headerSessionDetails);
             });
 
             Sinon.stub(mockServer.methods.dbQuery, 'getUserDetails', (userEmail, cb) => {
@@ -798,10 +805,7 @@ describe('REST API', () => {
 
             const options = {
                 method: 'GET',
-                url: '/user/{email}',
-                params: {
-                    email: userDummy.email
-                },
+                url: '/user',
                 headers: {
                     device: headerDevice,
                     version: headerVersion,
@@ -822,10 +826,7 @@ describe('REST API', () => {
 
             const options = {
                 method: 'GET',
-                url: '/user/{email}',
-                params: {
-                    email: userDummy.email
-                }
+                url: '/user'
             };
 
             mockServer.inject(options, (response) => {
@@ -840,10 +841,7 @@ describe('REST API', () => {
 
             const options = {
                 method: 'GET',
-                url: '/user/{email}',
-                params: {
-                    email: userDummy.email
-                },
+                url: '/user',
                 headers: {
                     token: headerSessionToken
                 }
@@ -861,10 +859,7 @@ describe('REST API', () => {
 
             const options = {
                 method: 'GET',
-                url: '/user/{email}',
-                params: {
-                    email: userDummy.email
-                },
+                url: '/user',
                 headers: {
                     device: headerDevice,
                     version: headerVersion,
@@ -884,10 +879,7 @@ describe('REST API', () => {
 
             const options = {
                 method: 'GET',
-                url: '/user/{email}',
-                params: {
-                    email: userDummy.email
-                },
+                url: '/user',
                 headers: {
                     device: headerDevice,
                     version: headerVersion,
@@ -915,10 +907,7 @@ describe('REST API', () => {
 
             const options = {
                 method: 'GET',
-                url: '/user/{email}',
-                params: {
-                    email: userDummy.email
-                },
+                url: '/user',
                 headers: {
                     device: headerDevice,
                     version: headerVersion,
@@ -946,10 +935,7 @@ describe('REST API', () => {
 
             const options = {
                 method: 'GET',
-                url: '/user/{email}',
-                params: {
-                    email: userDummy.email
-                },
+                url: '/user',
                 headers: {
                     device: headerDevice,
                     version: headerVersion,
@@ -981,10 +967,7 @@ describe('REST API', () => {
 
             const options = {
                 method: 'GET',
-                url: '/user/{email}',
-                params: {
-                    email: userDummy.email
-                },
+                url: '/user',
                 headers: {
                     device: headerDevice,
                     version: headerVersion,
@@ -995,7 +978,7 @@ describe('REST API', () => {
             mockServer.methods.dbQuery.getUserSession.restore();
             Sinon.stub(mockServer.methods.dbQuery, 'getUserSession', (token, userEmail, cb) => {
 
-                cb(null, headerSessionToken);
+                cb(null, headerSessionDetails);
             });
 
             mockServer.methods.dbQuery.getUserDetails.restore();
@@ -1024,12 +1007,12 @@ describe('REST API', () => {
         before((done) => {
             Sinon.stub(mockServer.methods.dbQuery, 'getUserSession', (token, userEmail, cb) => {
 
-                cb(null, headerSessionToken);
+                cb(null, headerSessionDetails);
             });
 
             Sinon.stub(mockServer.methods.dbQuery, 'refreshSessionExpiry', (sessionToken, cb) => {
 
-                cb(null, headerSessionToken);
+                cb(null, headerSessionDetails);
             });
 
             Sinon.stub(mockServer.methods.dbQuery, 'getUserDetails', (userEmail, cb) => {
@@ -1058,10 +1041,7 @@ describe('REST API', () => {
 
             const options = {
                 method: 'POST',
-                url: '/user/{email}',
-                params: {
-                    email: userDummy.email
-                },
+                url: '/user',
                 headers: {
                     device: headerDevice,
                     version: headerVersion,
@@ -1071,7 +1051,6 @@ describe('REST API', () => {
                     name: userDummy.name,
                     birthday: userDummy.birthday
                 }
-
             };
 
             mockServer.inject(options, (response) => {
@@ -1086,10 +1065,7 @@ describe('REST API', () => {
 
             const options = {
                 method: 'POST',
-                url: '/user/{email}',
-                params: {
-                    email: userDummy.email
-                },
+                url: '/user',
                 headers: {
                     device: headerDevice,
                     version: headerVersion,
@@ -1099,7 +1075,6 @@ describe('REST API', () => {
                     name: '!@#$%^&*()',
                     birthday: userDummy.birthday
                 }
-
             };
 
             mockServer.inject(options, (response) => {
@@ -1116,10 +1091,7 @@ describe('REST API', () => {
 
             const options = {
                 method: 'POST',
-                url: '/user/{email}',
-                params: {
-                    email: userDummy.email
-                },
+                url: '/user',
                 headers: {
                     device: headerDevice,
                     version: headerVersion,
@@ -1129,7 +1101,6 @@ describe('REST API', () => {
                     name: userDummy.name,
                     birthday: userDummy.birthday
                 }
-
             };
 
             mockServer.methods.dbQuery.updateUserDetails.restore();
@@ -1152,10 +1123,7 @@ describe('REST API', () => {
 
             const options = {
                 method: 'POST',
-                url: '/user/{email}',
-                params: {
-                    email: userDummy.email
-                },
+                url: '/user',
                 headers: {
                     device: headerDevice,
                     version: headerVersion,
@@ -1188,10 +1156,7 @@ describe('REST API', () => {
 
             const options = {
                 method: 'POST',
-                url: '/user/{email}',
-                params: {
-                    email: userDummy.email
-                },
+                url: '/user',
                 headers: {
                     device: headerDevice,
                     version: headerVersion,
@@ -1226,12 +1191,12 @@ describe('REST API', () => {
         before((done) => {
             Sinon.stub(mockServer.methods.dbQuery, 'getUserSession', (token, userEmail, cb) => {
 
-                cb(null, headerSessionToken);
+                cb(null, headerSessionDetails);
             });
 
             Sinon.stub(mockServer.methods.dbQuery, 'refreshSessionExpiry', (sessionToken, cb) => {
 
-                cb(null, headerSessionToken);
+                cb(null, headerSessionDetails);
             });
 
             Sinon.stub(mockServer.methods.dbQuery, 'getUserDetails', (userEmail, cb) => {
@@ -1265,10 +1230,7 @@ describe('REST API', () => {
                     // User change password with valid headers
                     const options = {
                         method: 'POST',
-                        url: '/user/{email}/password',
-                        params: {
-                            email: userDummy.email
-                        },
+                        url: '/user/password',
                         headers: {
                             device: headerDevice,
                             version: headerVersion,
@@ -1293,10 +1255,7 @@ describe('REST API', () => {
                     // User change password with error in bcryptjs compare
                     const options = {
                         method: 'POST',
-                        url: '/user/{email}/password',
-                        params: {
-                            email: userDummy.email
-                        },
+                        url: '/user/password',
                         headers: {
                             device: headerDevice,
                             version: headerVersion,
@@ -1331,10 +1290,7 @@ describe('REST API', () => {
                     // User change password with invalid new password
                     const options = {
                         method: 'POST',
-                        url: '/user/{email}/password',
-                        params: {
-                            email: userDummy.email
-                        },
+                        url: '/user/password',
                         headers: {
                             device: headerDevice,
                             version: headerVersion,
@@ -1364,10 +1320,7 @@ describe('REST API', () => {
                     // User change password with error in database query update user password
                     const options = {
                         method: 'POST',
-                        url: '/user/{email}/password',
-                        params: {
-                            email: userDummy.email
-                        },
+                        url: '/user/password',
                         headers: {
                             device: headerDevice,
                             version: headerVersion,
@@ -1399,10 +1352,7 @@ describe('REST API', () => {
                     // User change password with error in database query get user details
                     const options = {
                         method: 'POST',
-                        url: '/user/{email}/password',
-                        params: {
-                            email: userDummy.email
-                        },
+                        url: '/user/password',
                         headers: {
                             device: headerDevice,
                             version: headerVersion,
@@ -1433,10 +1383,7 @@ describe('REST API', () => {
                     // User change password with empty return in database query get user details
                     const options = {
                         method: 'POST',
-                        url: '/user/{email}/password',
-                        params: {
-                            email: userDummy.email
-                        },
+                        url: '/user/password',
                         headers: {
                             device: headerDevice,
                             version: headerVersion,

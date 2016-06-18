@@ -5,7 +5,8 @@ const Lodash = require('lodash');
 /**
  * Check request header that contains 'Token', 'Device', 'Version' for session
  * @param headers The request headers sent by client containing device and version.
- * @param cb The callback of where to pass err if no session found.
+ * @param cb The callback of where to pass err if no session found, else pass obj as object of returned
+ * 'session:{sessiontoken}' in database which contains the entityId, email, device, version.
  */
 const validateSession = function (server, headers, cb) {
 
@@ -14,7 +15,7 @@ const validateSession = function (server, headers, cb) {
     headerValidator.validateHeaders(headers, (err) => {
 
         if (err) {
-            return cb(err);
+            return cb(err, null);
         }
         else {
             const apiError = {
@@ -25,19 +26,21 @@ const validateSession = function (server, headers, cb) {
             const headerSession = headers.token;
 
             if (Lodash.isEmpty(headerSession)) {
-                return cb(apiError);
+                return cb(apiError, null);
             }
             else {
                 server.methods.dbQuery.getUserSession(headerSession, null, (err, obj) => {
 
+                    const sessionDetails = obj;
+
                     if (!Lodash.isEmpty(obj)) {
                         server.methods.dbQuery.refreshSessionExpiry(headerSession, (err, obj) => {
 
-                            cb(err);
+                            cb(err, sessionDetails);
                         });
                     }
                     else {
-                        cb(apiError);
+                        cb(apiError, null);
                     }
                 });
             }

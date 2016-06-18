@@ -11,8 +11,11 @@ module.exports = () => {
         const apiResponse = server.methods.apiResponse;
         const userValidator = server.methods.validationUser;
 
+        // request.auth is the server.auth strategy
+        const sessionDetails = request.auth.credentials;
+
         const passwordDetails = request.payload;
-        const email = request.params.email;
+        const email = sessionDetails.email;
 
         // Check if newPassword is valid
 
@@ -22,7 +25,7 @@ module.exports = () => {
 
                 if (err) {
                     const response = apiResponse.constructApiErrorResponse(400, err.errorCode, err.errorMessage);
-                    server.log('error', '/user/' + email + '/password ' + response);
+                    server.log('error', '/user/password ' + email + ' ' + response);
                     reply(response);
 
                 }
@@ -30,7 +33,7 @@ module.exports = () => {
                     server.methods.dbQuery.updateUserPassword(email, passwordDetails.newPassword, (err, obj) => {
                         if (err) {
                             const response = apiResponse.getUnexpectedApiError();
-                            server.log('error', '/user/' + email + '/password ' + response);
+                            server.log('error', '/user/password ' + email + ' ' + response);
                             reply(response);
                         }
                         else {
@@ -46,11 +49,11 @@ module.exports = () => {
 
         server.methods.dbQuery.getUserDetails(email, (err, obj) => {
             if (err) {
-                server.log('error', '/user/' + email + '/password ' + err);
+                server.log('error', '/user/password ' + email + ' ' + err);
                 reply(apiResponse.getUnexpectedApiError());
             }
             else if (Lodash.isEmpty(obj)) {
-                server.log('error', '/user/' + email + '/password');
+                server.log('error', '/user/password ' + email + ' ');
                 reply(apiResponse.getUserNonExistentError());
             }
             else {
@@ -61,7 +64,7 @@ module.exports = () => {
 
                     if (err || res === false) {
                         const response = apiResponse.constructApiErrorResponse(400, 400, 'Password invalid.');
-                        server.log('error', '/user/' + email + '/password ' + response);
+                        server.log('error', '/user/password ' + email + ' ' + response);
                         reply(response);
                     }
                     else {
