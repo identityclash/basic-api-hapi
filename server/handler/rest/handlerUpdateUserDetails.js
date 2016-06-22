@@ -10,8 +10,11 @@ module.exports = () => {
         const apiResponse = server.methods.apiResponse;
         const userValidator = server.methods.validationUser;
 
+        // request.auth is the server.auth strategy
+        const sessionDetails = request.auth.credentials;
+
         const userMod = request.payload;
-        const email = request.params.email;
+        const email = sessionDetails.email;
 
         // Validate and update user details if exists
 
@@ -20,14 +23,14 @@ module.exports = () => {
 
                 if (err) {
                     const response = apiResponse.constructApiErrorResponse(400, err.errorCode, err.errorMessage);
-                    server.log('error', '/user/' + request.params.email + ' ' + response);
+                    server.log('error', '/user ' + email + ' ' + response);
                     reply(response);
                 }
                 else {
                     server.methods.dbQuery.updateUserDetails(user, (err, obj) => {
                         if (err) {
                             const response = apiResponse.getUnexpectedApiError();
-                            server.log('error', '/user/' + request.params.email + ' ' + response);
+                            server.log('error', '/user ' + email + ' ' + response);
                             reply(response);
                         }
                         else {
@@ -43,7 +46,7 @@ module.exports = () => {
 
         server.methods.dbQuery.getUserDetails(email, (err, obj) => {
             if (err) {
-                server.log('error', '/user/' + email + ' ' + err);
+                server.log('error', '/user ' + email + ' ' + err);
                 reply(apiResponse.getUnexpectedApiError());
             }
             else if (Lodash.isEmpty(obj)) {

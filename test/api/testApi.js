@@ -4,6 +4,7 @@ const Code = require('code');
 const Lab = require('lab');
 const Sinon = require('sinon');
 const Async = require('async');
+const Bcryptjs = require('bcryptjs');
 const Composer = require('../../server/composer');
 
 const expect = Code.expect;
@@ -29,7 +30,14 @@ describe('REST API', () => {
 
     const headerDevice = 'Android';
     const headerVersion = '1.0.0';
-    const headerSessionToken = 'dummySessionToken';
+    const headerSessionToken = '2bb6512aa13f7f903080bba45a56dcfb';
+
+    const headerSessionDetails = {
+        entityId: 'fbfda32864ff92afc73219c5a7d34c01',
+        email: 'juancruz@gmail.com',
+        device: 'Android',
+        version: '1.0.0'
+    };
 
     function createApiServer(cb) {
         Composer((err, server) => {
@@ -61,12 +69,7 @@ describe('REST API', () => {
 
     after((done) => {
 
-        mockServer.stop((err) => {
-
-            if (err) {
-                console.log('Error stopping server instance!');
-            }
-        });
+        mockServer.stop((err) => {});
 
         done();
     });
@@ -628,7 +631,7 @@ describe('REST API', () => {
 
                 cb(null, '');
             });
-            
+
             mockServer.inject(options, (response) => {
                 expect(response.statusCode).to.equal(400);
                 expect(response.headers['content-type']).to.include('application/json');
@@ -774,12 +777,12 @@ describe('REST API', () => {
         before((done) => {
             Sinon.stub(mockServer.methods.dbQuery, 'getUserSession', (token, userEmail, cb) => {
 
-                cb(null, headerSessionToken);
+                cb(null, headerSessionDetails);
             });
 
             Sinon.stub(mockServer.methods.dbQuery, 'refreshSessionExpiry', (sessionToken, cb) => {
 
-                cb(null, headerSessionToken);
+                cb(null, headerSessionDetails);
             });
 
             Sinon.stub(mockServer.methods.dbQuery, 'getUserDetails', (userEmail, cb) => {
@@ -802,10 +805,7 @@ describe('REST API', () => {
 
             const options = {
                 method: 'GET',
-                url: '/user/{email}',
-                params: {
-                    email: userDummy.email
-                },
+                url: '/user',
                 headers: {
                     device: headerDevice,
                     version: headerVersion,
@@ -826,9 +826,44 @@ describe('REST API', () => {
 
             const options = {
                 method: 'GET',
-                url: '/user/{email}',
-                params: {
-                    email: userDummy.email
+                url: '/user'
+            };
+
+            mockServer.inject(options, (response) => {
+                expect(response.result).to.be.an.object();
+                expect(response.statusCode).to.equal(401);
+                expect(response.headers['content-type']).to.include('application/json');
+                done();
+            });
+        });
+
+        it('user get details with other headers empty', { timeout: 1000 }, (done) => {
+
+            const options = {
+                method: 'GET',
+                url: '/user',
+                headers: {
+                    token: headerSessionToken
+                }
+            };
+
+            mockServer.inject(options, (response) => {
+                expect(response.result).to.be.an.object();
+                expect(response.statusCode).to.equal(401);
+                expect(response.headers['content-type']).to.include('application/json');
+                done();
+            });
+        });
+
+        it('user get details with session token empty', { timeout: 1000 }, (done) => {
+
+            const options = {
+                method: 'GET',
+                url: '/user',
+                headers: {
+                    device: headerDevice,
+                    version: headerVersion,
+                    token: ''
                 }
             };
 
@@ -844,10 +879,7 @@ describe('REST API', () => {
 
             const options = {
                 method: 'GET',
-                url: '/user/{email}',
-                params: {
-                    email: userDummy.email
-                },
+                url: '/user',
                 headers: {
                     device: headerDevice,
                     version: headerVersion,
@@ -875,10 +907,7 @@ describe('REST API', () => {
 
             const options = {
                 method: 'GET',
-                url: '/user/{email}',
-                params: {
-                    email: userDummy.email
-                },
+                url: '/user',
                 headers: {
                     device: headerDevice,
                     version: headerVersion,
@@ -901,6 +930,76 @@ describe('REST API', () => {
                 done();
             });
         });
+
+        it('user get details with empty return of database query get user session', { timeout: 1000 }, (done) => {
+
+            const options = {
+                method: 'GET',
+                url: '/user',
+                headers: {
+                    device: headerDevice,
+                    version: headerVersion,
+                    token: headerSessionToken
+                }
+            };
+
+            mockServer.methods.dbQuery.getUserSession.restore();
+            Sinon.stub(mockServer.methods.dbQuery, 'getUserSession', (token, userEmail, cb) => {
+
+                cb(null, null);
+            });
+
+            mockServer.methods.dbQuery.getUserDetails.restore();
+            Sinon.stub(mockServer.methods.dbQuery, 'getUserDetails', (userEmail, cb) => {
+
+                cb(null, userDummy);
+            });
+
+            mockServer.inject(options, (response) => {
+                expect(response.result).to.be.an.object();
+                expect(response.statusCode).to.equal(401);
+                expect(response.headers['content-type']).to.include('application/json');
+                done();
+            });
+        });
+
+        it('user get details with error in database query refresh session expiry', { timeout: 1000 }, (done) => {
+
+            const options = {
+                method: 'GET',
+                url: '/user',
+                headers: {
+                    device: headerDevice,
+                    version: headerVersion,
+                    token: headerSessionToken
+                }
+            };
+
+            mockServer.methods.dbQuery.getUserSession.restore();
+            Sinon.stub(mockServer.methods.dbQuery, 'getUserSession', (token, userEmail, cb) => {
+
+                cb(null, headerSessionDetails);
+            });
+
+            mockServer.methods.dbQuery.getUserDetails.restore();
+            Sinon.stub(mockServer.methods.dbQuery, 'getUserDetails', (userEmail, cb) => {
+
+                cb(null, userDummy);
+            });
+
+            mockServer.methods.dbQuery.refreshSessionExpiry.restore();
+            Sinon.stub(mockServer.methods.dbQuery, 'refreshSessionExpiry', (sessionToken, cb) => {
+
+                cb({ error: 'dummy error message' }, null);
+            });
+
+            mockServer.inject(options, (response) => {
+                expect(response.result).to.be.an.object();
+                expect(response.statusCode).to.equal(401);
+                expect(response.headers['content-type']).to.include('application/json');
+                done();
+            });
+        });
     });
 
     describe('User update details', () => {
@@ -908,12 +1007,12 @@ describe('REST API', () => {
         before((done) => {
             Sinon.stub(mockServer.methods.dbQuery, 'getUserSession', (token, userEmail, cb) => {
 
-                cb(null, headerSessionToken);
+                cb(null, headerSessionDetails);
             });
 
             Sinon.stub(mockServer.methods.dbQuery, 'refreshSessionExpiry', (sessionToken, cb) => {
 
-                cb(null, headerSessionToken);
+                cb(null, headerSessionDetails);
             });
 
             Sinon.stub(mockServer.methods.dbQuery, 'getUserDetails', (userEmail, cb) => {
@@ -942,10 +1041,7 @@ describe('REST API', () => {
 
             const options = {
                 method: 'POST',
-                url: '/user/{email}',
-                params: {
-                    email: userDummy.email
-                },
+                url: '/user',
                 headers: {
                     device: headerDevice,
                     version: headerVersion,
@@ -955,7 +1051,6 @@ describe('REST API', () => {
                     name: userDummy.name,
                     birthday: userDummy.birthday
                 }
-
             };
 
             mockServer.inject(options, (response) => {
@@ -970,10 +1065,7 @@ describe('REST API', () => {
 
             const options = {
                 method: 'POST',
-                url: '/user/{email}',
-                params: {
-                    email: userDummy.email
-                },
+                url: '/user',
                 headers: {
                     device: headerDevice,
                     version: headerVersion,
@@ -983,7 +1075,6 @@ describe('REST API', () => {
                     name: '!@#$%^&*()',
                     birthday: userDummy.birthday
                 }
-
             };
 
             mockServer.inject(options, (response) => {
@@ -1000,10 +1091,7 @@ describe('REST API', () => {
 
             const options = {
                 method: 'POST',
-                url: '/user/{email}',
-                params: {
-                    email: userDummy.email
-                },
+                url: '/user',
                 headers: {
                     device: headerDevice,
                     version: headerVersion,
@@ -1013,7 +1101,6 @@ describe('REST API', () => {
                     name: userDummy.name,
                     birthday: userDummy.birthday
                 }
-
             };
 
             mockServer.methods.dbQuery.updateUserDetails.restore();
@@ -1036,10 +1123,7 @@ describe('REST API', () => {
 
             const options = {
                 method: 'POST',
-                url: '/user/{email}',
-                params: {
-                    email: userDummy.email
-                },
+                url: '/user',
                 headers: {
                     device: headerDevice,
                     version: headerVersion,
@@ -1072,10 +1156,7 @@ describe('REST API', () => {
 
             const options = {
                 method: 'POST',
-                url: '/user/{email}',
-                params: {
-                    email: userDummy.email
-                },
+                url: '/user',
                 headers: {
                     device: headerDevice,
                     version: headerVersion,
@@ -1100,6 +1181,236 @@ describe('REST API', () => {
                 expect(response.result).to.be.an.object();
                 expect(response.result.statusCode).to.equal(404);
                 expect(response.result.message).to.include('User non-existent');
+                done();
+            });
+        });
+    });
+
+    describe('User change password', () => {
+
+        before((done) => {
+            Sinon.stub(mockServer.methods.dbQuery, 'getUserSession', (token, userEmail, cb) => {
+
+                cb(null, headerSessionDetails);
+            });
+
+            Sinon.stub(mockServer.methods.dbQuery, 'refreshSessionExpiry', (sessionToken, cb) => {
+
+                cb(null, headerSessionDetails);
+            });
+
+            Sinon.stub(mockServer.methods.dbQuery, 'getUserDetails', (userEmail, cb) => {
+
+                userDummy.password = userDummyHashPassword;
+                cb(null, userDummy);
+            });
+
+            Sinon.stub(mockServer.methods.dbQuery, 'updateUserPassword', (userEmail, newPassword, cb) => {
+
+                cb(null, userDummy.email);
+            });
+
+            done();
+        });
+
+        after((done) => {
+
+            mockServer.methods.dbQuery.getUserSession.restore();
+            mockServer.methods.dbQuery.refreshSessionExpiry.restore();
+            mockServer.methods.dbQuery.getUserDetails.restore();
+            mockServer.methods.dbQuery.updateUserPassword.restore();
+            done();
+        });
+
+        it('user change password', {timeout: 1000}, (done) => {
+
+            Async.series([
+                (next) => {
+
+                    // User change password with valid headers
+                    const options = {
+                        method: 'POST',
+                        url: '/user/password',
+                        headers: {
+                            device: headerDevice,
+                            version: headerVersion,
+                            token: headerSessionToken
+                        },
+                        payload: {
+                            oldPassword: userDummy.password,
+                            newPassword: 'n3wP4ssw0rd'
+                        }
+                    };
+
+                    mockServer.inject(options, (response) => {
+                        expect(response.statusCode).to.equal(200);
+                        expect(response.headers['content-type']).to.include('application/json');
+                        expect(response.result).to.be.an.object();
+                        expect(response.result.message).to.include('Password updated');
+                        next();
+                    });
+                },
+                (next) => {
+
+                    // User change password with error in bcryptjs compare
+                    const options = {
+                        method: 'POST',
+                        url: '/user/password',
+                        headers: {
+                            device: headerDevice,
+                            version: headerVersion,
+                            token: headerSessionToken
+                        },
+                        payload: {
+                            oldPassword: userDummy.password,
+                            newPassword: '12345678'
+                        }
+                    };
+
+                    Sinon.stub(Bcryptjs, 'compare', (hashStr, str, cb) => {
+
+                        cb({error: 'dummy error message'}, false);
+                    });
+
+                    mockServer.inject(options, (response) => {
+                        expect(response.statusCode).to.equal(400);
+                        expect(response.headers['content-type']).to.include('application/json');
+                        expect(response.result).to.be.an.object();
+                        expect(response.result.message).to.include('Password invalid');
+                        next();
+                    });
+                },
+                (next) => {
+
+                    Bcryptjs.compare.restore();
+                    next();
+                },
+                (next) => {
+
+                    // User change password with invalid new password
+                    const options = {
+                        method: 'POST',
+                        url: '/user/password',
+                        headers: {
+                            device: headerDevice,
+                            version: headerVersion,
+                            token: headerSessionToken
+                        },
+                        payload: {
+                            oldPassword: userDummy.password,
+                            newPassword: '12345678'
+                        }
+                    };
+
+                    Sinon.stub(Bcryptjs, 'compare', (hashStr, str, cb) => {
+
+                        cb(null, true);
+                    });
+
+                    mockServer.inject(options, (response) => {
+                        expect(response.statusCode).to.equal(400);
+                        expect(response.headers['content-type']).to.include('application/json');
+                        expect(response.result).to.be.an.object();
+                        expect(response.result.message).to.include('User password invalid');
+                        next();
+                    });
+                },
+                (next) => {
+
+                    // User change password with error in database query update user password
+                    const options = {
+                        method: 'POST',
+                        url: '/user/password',
+                        headers: {
+                            device: headerDevice,
+                            version: headerVersion,
+                            token: headerSessionToken
+                        },
+                        payload: {
+                            oldPassword: userDummy.password,
+                            newPassword: 'n3wP4ssw0rd'
+                        }
+                    };
+
+                    mockServer.methods.dbQuery.updateUserPassword.restore();
+
+                    Sinon.stub(mockServer.methods.dbQuery, 'updateUserPassword', (userEmail, newPassword, cb) => {
+
+                        cb({error: 'dummy error message'}, null);
+                    });
+
+                    mockServer.inject(options, (response) => {
+                        expect(response.statusCode).to.equal(400);
+                        expect(response.headers['content-type']).to.include('application/json');
+                        expect(response.result).to.be.an.object();
+                        expect(response.result.message).to.include('Unexpected API error');
+                        next();
+                    });
+                },
+                (next) => {
+
+                    // User change password with error in database query get user details
+                    const options = {
+                        method: 'POST',
+                        url: '/user/password',
+                        headers: {
+                            device: headerDevice,
+                            version: headerVersion,
+                            token: headerSessionToken
+                        },
+                        payload: {
+                            oldPassword: userDummy.password,
+                            newPassword: 'n3wP4ssw0rd'
+                        }
+                    };
+
+                    mockServer.methods.dbQuery.getUserDetails.restore();
+                    Sinon.stub(mockServer.methods.dbQuery, 'getUserDetails', (userEmail, cb) => {
+
+                        cb({error: 'dummy error message'}, null);
+                    });
+
+                    mockServer.inject(options, (response) => {
+                        expect(response.statusCode).to.equal(400);
+                        expect(response.headers['content-type']).to.include('application/json');
+                        expect(response.result).to.be.an.object();
+                        expect(response.result.message).to.include('Unexpected API error');
+                        next();
+                    });
+                },
+                (next) => {
+
+                    // User change password with empty return in database query get user details
+                    const options = {
+                        method: 'POST',
+                        url: '/user/password',
+                        headers: {
+                            device: headerDevice,
+                            version: headerVersion,
+                            token: headerSessionToken
+                        },
+                        payload: {
+                            oldPassword: userDummy.password,
+                            newPassword: 'n3wP4ssw0rd'
+                        }
+                    };
+
+                    mockServer.methods.dbQuery.getUserDetails.restore();
+                    Sinon.stub(mockServer.methods.dbQuery, 'getUserDetails', (userEmail, cb) => {
+
+                        cb(null, null);
+                    });
+
+                    mockServer.inject(options, (response) => {
+                        expect(response.statusCode).to.equal(404);
+                        expect(response.headers['content-type']).to.include('application/json');
+                        expect(response.result).to.be.an.object();
+                        expect(response.result.message).to.include('User non-existent');
+                        next();
+                    });
+                }
+            ], () => {
+
                 done();
             });
         });

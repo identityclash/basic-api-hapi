@@ -16,7 +16,7 @@ module.exports = [
         }
     },
     {
-        path: '/user/{email}',
+        path: '/user',
         method: 'GET',
         config: {
             auth: 'auth',
@@ -26,7 +26,7 @@ module.exports = [
         }
     },
     {
-        path: '/user/{email}',
+        path: '/user',
         method: 'POST',
         config: {
             auth: 'auth',
@@ -36,7 +36,7 @@ module.exports = [
         }
     },
     {
-        path: '/user/{email}/password',
+        path: '/user/password',
         method: 'POST',
         config: {
             auth: 'auth',

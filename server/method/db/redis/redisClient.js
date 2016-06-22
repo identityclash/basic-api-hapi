@@ -63,7 +63,8 @@ const getUserSession = function (token, userEmail, cb) {
             // obj Returns the session token string
             return cb(err, obj);
         });
-    } else {
+    }
+    else {
         const err = {
             message: 'No passed arguments token or email'
         };
@@ -78,13 +79,12 @@ const refreshSessionExpiry = function (sessionToken, cb) {
         if (err) {
             return cb(err, null);
         }
-        else {
-            const entityId = obj.entityId;
-            const expiryDuration = parseInt((Number(new Date)) / 1000) + 1800;
-            redisClient.expireat('session:' + sessionToken, expiryDuration);
-            redisClient.expireat('session:email:' + entityId, expiryDuration);
-            return cb(null, sessionToken);
-        }
+
+        const entityId = obj.entityId;
+        const expiryDuration = parseInt((Number(new Date)) / 1000) + 1800;
+        redisClient.expireat('session:' + sessionToken, expiryDuration);
+        redisClient.expireat('session:email:' + entityId, expiryDuration);
+        return cb(null, sessionToken);
     });
 };
 

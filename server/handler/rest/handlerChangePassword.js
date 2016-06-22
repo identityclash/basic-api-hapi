@@ -11,25 +11,29 @@ module.exports = () => {
         const apiResponse = server.methods.apiResponse;
         const userValidator = server.methods.validationUser;
 
-        const passwordDetails = request.payload;
-        const email = request.params.email;
+        // request.auth is the server.auth strategy
+        const sessionDetails = request.auth.credentials;
 
-        // Check if new_password is valid
+        const passwordDetails = request.payload;
+        const email = sessionDetails.email;
+
+        // Check if newPassword is valid
 
         const checkNewPassword = () => {
-            userValidator.validatePassword(passwordDetails.new_password, (err) => {
+
+            userValidator.validatePassword(passwordDetails.newPassword, (err) => {
 
                 if (err) {
                     const response = apiResponse.constructApiErrorResponse(400, err.errorCode, err.errorMessage);
-                    server.log('error', '/user/' + email + '/password ' + response);
-                    reply(response).type('application/json');
+                    server.log('error', '/user/password ' + email + ' ' + response);
+                    reply(response);
 
                 }
                 else {
-                    server.methods.dbQuery.updateUserPassword(email, passwordDetails.new_password, (err, obj) => {
+                    server.methods.dbQuery.updateUserPassword(email, passwordDetails.newPassword, (err, obj) => {
                         if (err) {
                             const response = apiResponse.getUnexpectedApiError();
-                            server.log('error', '/user/' + email + '/password ' + response);
+                            server.log('error', '/user/password ' + email + ' ' + response);
                             reply(response);
                         }
                         else {
@@ -45,21 +49,22 @@ module.exports = () => {
 
         server.methods.dbQuery.getUserDetails(email, (err, obj) => {
             if (err) {
-                server.log('error', '/user/' + email + '/password ' + err);
+                server.log('error', '/user/password ' + email + ' ' + err);
                 reply(apiResponse.getUnexpectedApiError());
             }
             else if (Lodash.isEmpty(obj)) {
+                server.log('error', '/user/password ' + email + ' ');
                 reply(apiResponse.getUserNonExistentError());
             }
             else {
 
-                // Check if old_password matches the stored current user password in database
+                // Check if oldPassword matches the stored current user password in database
 
-                Bcryptjs.compare(passwordDetails.old_password, obj.password, (err, res) => {
+                Bcryptjs.compare(passwordDetails.oldPassword, obj.password, (err, res) => {
 
                     if (err || res === false) {
                         const response = apiResponse.constructApiErrorResponse(400, 400, 'Password invalid.');
-                        server.log('error', '/user/' + email + '/password ' + response);
+                        server.log('error', '/user/password ' + email + ' ' + response);
                         reply(response);
                     }
                     else {
