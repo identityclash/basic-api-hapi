@@ -10,10 +10,36 @@ const manifest = {
         connections: [
             {
                 port: 3000,
-                labels: ['api']
+                labels: ['api'],
+                routes: {
+                    files: { relativeTo: process.cwd() + '/static' }
+                }
             }
         ],
         registrations: [
+            { plugin: 'inert' },
+            {
+                plugin: {
+                    register: 'errorh',
+                    options: {
+                        errorFiles: {
+                            404: '404.html',
+                            default: '50x.html'
+                        },
+                        staticRoute: {
+                            path: '/{path*}',
+                            method: '*',
+                            handler: {
+                                directory: {
+                                    path: './',
+                                    index: true,
+                                    redirectToSlash: true
+                                }
+                            }
+                        }
+                    }
+                }
+            },
             {
                 plugin: {
                     register: './authentication'
