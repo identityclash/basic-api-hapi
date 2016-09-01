@@ -20,6 +20,7 @@
     "code": "^3.0.0",
     "confidence": "^3.0.0",
     "crypto-js": "^3.1.6",
+    "errorh": "^0.1.1",
     "fakeredis": "^1.0.3",
     "glue": "^3.2.0",
     "good": "^7.0.1",

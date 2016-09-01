@@ -2,21 +2,11 @@
 
 module.exports = [
     {
-        path: '/{path*}',
-        method: '*',
-        handler: {
-            rootHandler: {
-                type: 'notfound'
-            }
-        }
-    },
-    {
         path: '/',
         method: 'get',
-        handler: {
-            rootHandler: {
-                type: 'index'
-            }
+        handler: (request, reply) => {
+
+            return reply.file('pages/index.html');
         }
     }
 ];
